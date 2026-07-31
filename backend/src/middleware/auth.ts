@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { verifyToken } from '../services/auth';
+import { resolveUser } from '../services/auth';
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : null;
 
@@ -9,10 +9,11 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ error: 'Missing or invalid Authorization header' });
   }
 
-  try {
-    req.user = verifyToken(token);
-    next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid or expired token' });
+  const user = await resolveUser(token);
+  if (!user) {
+    return res.status(401).json({ error: 'Your session is no longer valid. Please log in again.' });
   }
+
+  req.user = user;
+  next();
 }

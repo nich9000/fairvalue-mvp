@@ -19,6 +19,22 @@ export function verifyToken(token: string): AuthTokenPayload {
   return jwt.verify(token, JWT_SECRET as string) as AuthTokenPayload;
 }
 
+// Verifies the token AND that its user still exists and is active — a valid signature
+// alone isn't enough if the account was since deleted or deactivated.
+export async function resolveUser(token: string): Promise<AuthTokenPayload | null> {
+  let payload: AuthTokenPayload;
+  try {
+    payload = verifyToken(token);
+  } catch {
+    return null;
+  }
+
+  const { data: user } = await supabase.from('users').select('id, email, is_active').eq('id', payload.user_id).maybeSingle();
+  if (!user || !user.is_active) return null;
+
+  return { user_id: user.id, email: user.email };
+}
+
 export async function signup(email: string, password: string) {
   const { data: existing } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
   if (existing) {

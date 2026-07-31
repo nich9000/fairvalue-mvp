@@ -23,6 +23,7 @@ export default function Results() {
   const { storeId } = useParams<{ storeId: string }>();
   const [data, setData] = useState<StoreData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -33,20 +34,36 @@ export default function Results() {
       .catch(() => setError('Could not load this valuation.'));
   }, [storeId]);
 
+  async function claimAndMarkSaved() {
+    try {
+      await claimStore(storeId!);
+      setSaved(true);
+      setSaveError(null);
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        // Cached session no longer valid (e.g. account was removed) — clear it and ask to log in again.
+        localStorage.removeItem('fairvalue_token');
+        localStorage.removeItem('fairvalue_user_id');
+        setShowAuth(true);
+      } else {
+        setSaveError(err?.response?.data?.error ?? 'Could not save this valuation. Please try again.');
+      }
+    }
+  }
+
   async function handleSave() {
+    setSaveError(null);
     const token = localStorage.getItem('fairvalue_token');
     if (!token) {
       setShowAuth(true);
       return;
     }
-    await claimStore(storeId!);
-    setSaved(true);
+    await claimAndMarkSaved();
   }
 
   async function handleAuthSuccess() {
     setShowAuth(false);
-    await claimStore(storeId!);
-    setSaved(true);
+    await claimAndMarkSaved();
   }
 
   if (error) {
@@ -100,6 +117,7 @@ export default function Results() {
               {saved ? 'Saved to your account' : 'Save this valuation'}
             </button>
           </div>
+          {saveError && <p className="mt-2 text-sm text-red-600">{saveError}</p>}
         </>
       ) : (
         <p className="mt-4 text-gray-500">No valuation available yet.</p>

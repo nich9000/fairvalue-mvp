@@ -44,34 +44,24 @@ router.post('/', optionalAuth, async (req, res) => {
   const input = req.body as StoreInput;
 
   try {
-    const storeFields = {
-      store_name: input.store_name,
-      platform: input.platform,
-      annual_revenue: input.annual_revenue,
-      annual_profit: input.annual_profit,
-      store_age_months: input.store_age_months,
-      customer_concentration_pct: input.customer_concentration_pct,
-      customer_retention_pct: input.customer_retention_pct,
-      gross_margin_pct: input.gross_margin_pct,
-      recurring_revenue_pct: input.recurring_revenue_pct,
-      growth_rate_yoy_pct: input.growth_rate_yoy_pct,
-      niche_specialization_level: input.niche_specialization_level,
-    };
-
-    let { data: store, error: storeError } = await supabase
+    const { data: store, error: storeError } = await supabase
       .from('stores')
-      .insert({ user_id: req.user?.user_id ?? null, ...storeFields })
+      .insert({
+        user_id: req.user?.user_id ?? null,
+        store_name: input.store_name,
+        platform: input.platform,
+        annual_revenue: input.annual_revenue,
+        annual_profit: input.annual_profit,
+        store_age_months: input.store_age_months,
+        customer_concentration_pct: input.customer_concentration_pct,
+        customer_retention_pct: input.customer_retention_pct,
+        gross_margin_pct: input.gross_margin_pct,
+        recurring_revenue_pct: input.recurring_revenue_pct,
+        growth_rate_yoy_pct: input.growth_rate_yoy_pct,
+        niche_specialization_level: input.niche_specialization_level,
+      })
       .select('*')
       .single();
-
-    // A cached token for a since-deleted account trips the FK constraint — fall back to anonymous.
-    if (storeError?.code === '23503' && req.user) {
-      ({ data: store, error: storeError } = await supabase
-        .from('stores')
-        .insert({ user_id: null, ...storeFields })
-        .select('*')
-        .single());
-    }
 
     if (storeError || !store) throw new Error(storeError?.message ?? 'Failed to create store');
 
