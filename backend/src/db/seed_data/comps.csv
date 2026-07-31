@@ -1,0 +1,83 @@
+sale_price,annual_revenue,annual_profit,multiple_achieved,platform,niche_category,fulfillment_model,traffic_channel,was_seasonal,growth_rate_yoy_pct,customer_retention_pct,gross_margin_pct,recurring_revenue_pct,sold_date,source,is_verified,data_quality_score,notes
+180000,60000,20000,3,Shopify,Pet supplies,merchant_fulfilled,organic,FALSE,12,65,45,5,2026-06-15,empire_flippers,TRUE,95,Verified broker data
+92000,40000,15000,2.3,Etsy,Handmade jewelry,merchant_fulfilled,etsy,FALSE,8,70,50,0,2026-06-10,flippa,TRUE,85,Etsy seller with reviews
+140000,50000,18000,2.8,WooCommerce,Fitness apparel,merchant_fulfilled,paid_ads,FALSE,15,55,55,8,2026-05-20,flippa,TRUE,80,Self-reported but verified
+75000,35000,10000,2.1,Shopify,Dropshipping,merchant_fulfilled,paid_ads,FALSE,5,45,35,0,2026-04-05,bizbuysell,FALSE,55,Ask price as fallback
+250000,80000,28000,3.1,Amazon,FBA electronics,FBA,organic,FALSE,20,60,40,2,2026-03-18,empire_flippers,TRUE,90,Amazon FBA seller
+165000,55000,22000,3,Shopify,Home decor,merchant_fulfilled,organic,FALSE,10,60,45,3,2026-06-12,acquire_com,TRUE,92,Strong organic reach
+120000,45000,16000,2.7,WooCommerce,Kitchen gadgets,merchant_fulfilled,email,FALSE,7,75,50,10,2026-06-08,flippa,TRUE,88,High repeat customers
+98000,42000,14000,2.3,Etsy,Vintage collectibles,merchant_fulfilled,etsy,FALSE,3,80,55,0,2026-05-25,flippa,FALSE,70,Self-reported Etsy
+210000,70000,24000,3,Shopify,Beauty supplements,merchant_fulfilled,paid_ads,FALSE,18,62,48,12,2026-06-20,empire_flippers,TRUE,93,Recurring revenue model
+155000,60000,20000,2.6,Amazon,FBA sports gear,FBA,organic,FALSE,14,58,42,1,2026-06-02,acquire_com,TRUE,91,Popular sports niche
+88000,38000,12000,2.3,Shopify,Indoor plants,merchant_fulfilled,social,FALSE,25,50,40,0,2026-05-15,flippa,TRUE,75,Strong social presence
+175000,65000,23000,2.7,WooCommerce,Outdoor adventure gear,merchant_fulfilled,organic,TRUE,8,55,50,2,2026-06-05,empire_flippers,TRUE,90,Seasonal business
+125000,50000,17000,2.5,Shopify,Sustainable fashion,merchant_fulfilled,mixed,FALSE,16,65,55,0,2026-06-18,flippa,TRUE,82,Multiple sales channels
+225000,75000,26000,3,Amazon,FBA home office,FBA,organic,FALSE,12,60,45,3,2026-06-12,empire_flippers,TRUE,92,Post-pandemic demand
+105000,44000,15000,2.4,Etsy,Personalized gifts,merchant_fulfilled,etsy,FALSE,6,68,52,5,2026-05-20,flippa,FALSE,75,Personalization premium
+142000,52000,19000,2.7,Shopify,Skincare niche,merchant_fulfilled,paid_ads,FALSE,22,70,60,15,2026-06-10,acquire_com,TRUE,90,High repeat rate
+198000,68000,24000,2.9,WooCommerce,Gaming peripherals,merchant_fulfilled,social,FALSE,19,52,48,0,2026-05-28,empire_flippers,TRUE,88,Gamer community
+115000,48000,16000,2.4,Shopify,Dog training courses,merchant_fulfilled,email,FALSE,11,80,70,25,2026-06-08,flippa,TRUE,85,Subscription model
+165000,58000,21000,2.8,Amazon,FBA camping gear,FBA,organic,FALSE,13,56,42,0,2026-06-15,empire_flippers,TRUE,91,Outdoor enthusiasts
+72000,36000,9000,2,Shopify,Niche collectibles,merchant_fulfilled,organic,FALSE,4,40,30,0,2026-04-20,bizbuysell,FALSE,50,Low margin category
+185000,62000,22000,3,Etsy,Handcrafted woodwork,merchant_fulfilled,etsy,FALSE,7,72,55,0,2026-06-12,flippa,TRUE,85,Artisan quality
+135000,51000,18000,2.6,Shopify,Wellness products,merchant_fulfilled,paid_ads,FALSE,14,68,50,8,2026-06-05,flippa,TRUE,82,Health conscious buyers
+168000,60000,21000,2.8,WooCommerce,Fashion brand,merchant_fulfilled,mixed,FALSE,9,62,45,0,2026-06-01,empire_flippers,TRUE,89,DTC brand
+220000,72000,25000,3.1,Amazon,FBA kitchen tools,FBA,organic,FALSE,16,58,40,2,2026-06-18,acquire_com,TRUE,92,Kitchen trend
+95000,41000,13000,2.3,Shopify,Pet toys,merchant_fulfilled,amazon,FALSE,10,55,42,2,2026-05-22,flippa,TRUE,78,Multi-channel
+148000,54000,19000,2.7,Etsy,Jewelry making supplies,merchant_fulfilled,etsy,FALSE,5,65,48,0,2026-06-08,flippa,FALSE,72,Craft community
+110000,46000,15000,2.4,WooCommerce,Subscription box,merchant_fulfilled,email,FALSE,20,85,60,60,2026-06-10,empire_flippers,TRUE,88,Pure subscription
+155000,56000,20000,2.8,Shopify,Eco-friendly products,merchant_fulfilled,organic,FALSE,12,60,55,0,2026-06-15,flippa,TRUE,84,Sustainability niche
+190000,65000,23000,2.9,Amazon,FBA phone accessories,FBA,organic,FALSE,15,50,38,1,2026-06-12,empire_flippers,TRUE,90,High volume seller
+78000,37000,10000,2.1,Shopify,Hobby supplies,merchant_fulfilled,organic,FALSE,6,45,35,0,2026-05-18,bizbuysell,FALSE,52,Niche market
+165000,59000,21000,2.8,Etsy,Digital art prints,merchant_fulfilled,etsy,FALSE,8,58,70,15,2026-06-20,flippa,TRUE,80,Print-on-demand
+138000,52000,18000,2.7,WooCommerce,Fitness equipment,merchant_fulfilled,paid_ads,FALSE,18,55,50,0,2026-06-02,empire_flippers,TRUE,85,Fitness trend
+205000,68000,24000,3,Shopify,Gaming accessories,merchant_fulfilled,mixed,FALSE,14,52,45,0,2026-06-18,acquire_com,TRUE,91,Gaming community
+88000,39000,13000,2.3,Amazon,FBA bath products,FBA,organic,FALSE,11,62,48,5,2026-05-25,flippa,TRUE,82,Consumer staples
+125000,50000,17000,2.5,Shopify,Office supplies,merchant_fulfilled,organic,FALSE,3,40,30,2,2026-06-05,flippa,TRUE,75,Commodity niche
+175000,62000,22000,2.8,Etsy,Vintage fashion,merchant_fulfilled,etsy,FALSE,4,65,50,0,2026-06-10,empire_flippers,TRUE,86,Vintage niche
+142000,53000,19000,2.7,WooCommerce,Craft supplies,merchant_fulfilled,email,FALSE,8,70,45,0,2026-05-30,flippa,FALSE,75,Crafter community
+195000,66000,23000,3,Shopify,Organic snacks,merchant_fulfilled,paid_ads,FALSE,25,68,60,10,2026-06-15,empire_flippers,TRUE,92,Health food trend
+108000,45000,15000,2.4,Amazon,FBA cookware,FBA,organic,FALSE,7,55,42,0,2026-06-08,flippa,TRUE,83,Kitchen niche
+155000,57000,20000,2.7,Shopify,Subscription service,merchant_fulfilled,email,FALSE,30,90,75,100,2026-06-12,acquire_com,TRUE,91,Pure subscription
+168000,61000,21000,2.8,Etsy,Personalized jewelry,merchant_fulfilled,etsy,FALSE,9,72,55,8,2026-06-18,flippa,TRUE,84,Custom orders
+118000,48000,16000,2.5,WooCommerce,Photography gear,merchant_fulfilled,organic,FALSE,5,50,40,0,2026-05-20,empire_flippers,TRUE,80,Professional niche
+185000,63000,22000,2.9,Shopify,Baby products,merchant_fulfilled,mixed,FALSE,12,68,50,3,2026-06-10,flippa,TRUE,85,Baby market growth
+138000,52000,18000,2.7,Amazon,FBA storage solutions,FBA,organic,FALSE,8,52,38,0,2026-06-05,empire_flippers,TRUE,88,Organization trend
+95000,41000,13000,2.3,Shopify,Niche books,merchant_fulfilled,organic,FALSE,2,35,25,0,2026-05-25,bizbuysell,FALSE,50,Slow growth
+145000,54000,19000,2.7,Etsy,Handmade candles,merchant_fulfilled,etsy,FALSE,6,70,60,0,2026-06-20,flippa,TRUE,82,Candle trend
+128000,50000,17000,2.6,WooCommerce,Yoga equipment,merchant_fulfilled,paid_ads,FALSE,13,62,55,10,2026-06-12,empire_flippers,TRUE,86,Wellness trend
+192000,64000,23000,3,Shopify,Tech gadgets,merchant_fulfilled,mixed,FALSE,16,48,42,0,2026-06-15,acquire_com,TRUE,90,Early adopter market
+115000,46000,15000,2.5,Amazon,FBA office furniture,FBA,organic,FALSE,14,50,35,0,2026-06-08,flippa,TRUE,81,Work-from-home
+162000,58000,21000,2.8,Shopify,Sustainable fashion,merchant_fulfilled,organic,FALSE,10,65,55,0,2026-06-18,empire_flippers,TRUE,87,Eco-conscious
+75000,36000,9000,2.1,Etsy,Digital products,merchant_fulfilled,etsy,FALSE,20,75,95,40,2026-05-15,flippa,FALSE,70,Digital downloads
+148000,54000,19000,2.7,WooCommerce,Health supplements,merchant_fulfilled,paid_ads,FALSE,19,70,65,8,2026-06-02,flippa,TRUE,84,Supplement boom
+168000,59000,21000,2.8,Shopify,Pet accessories,merchant_fulfilled,email,FALSE,11,68,50,5,2026-06-10,empire_flippers,TRUE,88,Pet industry
+205000,69000,24000,3,Amazon,FBA outdoor gear,FBA,organic,FALSE,12,56,42,0,2026-06-20,acquire_com,TRUE,92,Outdoor recreation
+88000,39000,12000,2.3,Shopify,Hobby models,merchant_fulfilled,organic,FALSE,3,40,30,0,2026-05-28,flippa,TRUE,72,Niche hobby market
+138000,52000,18000,2.7,Etsy,Custom mugs,merchant_fulfilled,etsy,FALSE,14,65,70,5,2026-06-15,empire_flippers,TRUE,85,Personalized products
+155000,56000,20000,2.8,WooCommerce,Meditation tools,merchant_fulfilled,organic,FALSE,22,75,60,10,2026-06-08,flippa,TRUE,86,Mindfulness trend
+182000,62000,22000,2.9,Shopify,Vintage decor,merchant_fulfilled,mixed,FALSE,5,55,50,0,2026-06-12,acquire_com,TRUE,89,Nostalgia market
+115000,47000,16000,2.4,Amazon,FBA gardening tools,FBA,organic,FALSE,9,50,40,0,2026-06-05,flippa,TRUE,83,Home gardening trend
+145000,53000,19000,2.7,Shopify,Indie games,merchant_fulfilled,paid_ads,FALSE,8,45,40,15,2026-06-18,empire_flippers,TRUE,82,Gaming community
+128000,50000,17000,2.6,Etsy,Handmade soaps,merchant_fulfilled,etsy,FALSE,7,72,65,0,2026-06-10,flippa,FALSE,80,Natural products
+175000,61000,22000,2.9,WooCommerce,Fitness coaching,merchant_fulfilled,email,FALSE,18,80,75,50,2026-06-15,flippa,TRUE,87,Coaching model
+165000,59000,21000,2.8,Shopify,Eco packaging,merchant_fulfilled,B2B,FALSE,16,40,50,20,2026-06-12,acquire_com,FALSE,75,B2B model
+98000,42000,14000,2.3,Amazon,FBA phone stands,FBA,organic,FALSE,12,48,35,0,2026-05-30,flippa,TRUE,81,Accessory niche
+155000,56000,20000,2.8,Shopify,CBD products,merchant_fulfilled,paid_ads,FALSE,35,65,60,5,2026-06-20,empire_flippers,TRUE,88,Emerging category
+118000,48000,16000,2.5,Etsy,Clothing alterations,service,organic,FALSE,4,85,70,0,2026-06-08,flippa,TRUE,78,Service hybrid
+185000,64000,23000,2.9,WooCommerce,Language courses,merchant_fulfilled,email,FALSE,28,80,85,70,2026-06-15,acquire_com,TRUE,89,Educational SaaS
+148000,54000,19000,2.7,Shopify,Niche collectibles,merchant_fulfilled,organic,FALSE,2,35,20,0,2026-05-25,flippa,TRUE,73,Stable niche
+125000,50000,17000,2.5,Amazon,FBA phone cases,FBA,organic,FALSE,10,45,30,0,2026-06-12,empire_flippers,TRUE,84,Commodity seller
+175000,62000,22000,2.8,Etsy,Art prints,merchant_fulfilled,etsy,FALSE,6,58,72,20,2026-06-18,flippa,FALSE,78,Print-on-demand
+95000,41000,13000,2.3,Shopify,Niche fashion,merchant_fulfilled,paid_ads,FALSE,8,50,40,0,2026-06-05,bizbuysell,FALSE,55,Low margin retail
+165000,59000,21000,2.8,WooCommerce,Wellness coaching,merchant_fulfilled,email,FALSE,24,85,80,60,2026-06-10,flippa,TRUE,86,Coaching model
+138000,52000,18000,2.7,Shopify,Specialty tea,merchant_fulfilled,mixed,FALSE,14,70,65,8,2026-06-20,empire_flippers,TRUE,87,Gourmet niche
+192000,64000,23000,3,Etsy,Handmade furniture,merchant_fulfilled,etsy,FALSE,5,60,45,0,2026-06-15,flippa,TRUE,84,Furniture artisan
+168000,60000,21000,2.8,Amazon,FBA water bottles,FBA,organic,FALSE,11,58,42,2,2026-06-12,empire_flippers,TRUE,89,Eco-friendly trend
+145000,54000,19000,2.7,Shopify,Niche apparel,merchant_fulfilled,organic,FALSE,12,65,50,0,2026-06-18,acquire_com,TRUE,86,Direct-to-consumer
+178000,63000,22000,2.8,WooCommerce,Craft kits,merchant_fulfilled,paid_ads,FALSE,16,72,60,10,2026-06-10,flippa,TRUE,85,DIY trend
+155000,56000,20000,2.8,Etsy,Upcycled fashion,merchant_fulfilled,etsy,FALSE,18,68,65,0,2026-06-20,flippa,TRUE,83,Sustainable fashion
+128000,51000,17000,2.5,Shopify,Niche sports,merchant_fulfilled,social,FALSE,9,55,45,0,2026-06-05,empire_flippers,TRUE,82,Sports niche
+190000,65000,23000,2.9,Amazon,FBA travel accessories,FBA,organic,FALSE,13,52,40,1,2026-06-15,flippa,TRUE,88,Travel recovery
+142000,53000,19000,2.7,WooCommerce,Eco-home products,merchant_fulfilled,email,FALSE,15,70,55,5,2026-06-12,empire_flippers,TRUE,86,Green living
+165000,58000,21000,2.8,Shopify,Niche beauty,merchant_fulfilled,paid_ads,FALSE,20,75,65,12,2026-06-18,acquire_com,TRUE,89,Beauty trend continues
