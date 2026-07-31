@@ -52,6 +52,15 @@ npm run dev
 
 Runs on `http://localhost:5173`.
 
+### Running both at once
+
+After the one-time setup above, you can start both servers together from the project root:
+
+```bash
+npm install   # once, installs the `concurrently` runner
+npm run dev
+```
+
 ## Valuation algorithm
 
 See [`backend/src/services/valuation.ts`](backend/src/services/valuation.ts). Summary:
