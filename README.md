@@ -2,6 +2,8 @@
 
 E-commerce seller valuation SaaS. Get a free store valuation plus an improvement roadmap based on real comparable sales.
 
+**Live**: [fairvalue-mvp.vercel.app](https://fairvalue-mvp.vercel.app) (frontend) · [fairvalue-mvp-production.up.railway.app](https://fairvalue-mvp-production.up.railway.app/api/health) (backend health check)
+
 ## Stack
 
 - **Frontend**: React + TypeScript + Vite + TailwindCSS, deployed to Vercel
@@ -74,8 +76,8 @@ See [`backend/src/services/valuation.ts`](backend/src/services/valuation.ts). Su
 
 ## Deployment
 
-- **Frontend → Vercel**: connect the GitHub repo, set the `VITE_*` env vars, deploy `frontend/`.
-- **Backend → Railway**: connect the GitHub repo, set the env vars from `backend/.env.example`, deploy using `backend/Dockerfile`.
+- **Frontend → Vercel**: connect the GitHub repo, root directory `frontend`, set `VITE_API_URL` to the Railway backend's public URL.
+- **Backend → Railway**: connect the GitHub repo, root directory `backend`, set the env vars from `backend/.env.example` (`FRONTEND_URL` must match the Vercel URL for CORS). Deploys via `backend/Dockerfile` (Node 22 — `@supabase/supabase-js`'s realtime client needs native WebSocket support, unavailable on Node 20). Railway injects its own `PORT` — when generating the public domain, set the target port to match whatever the deploy logs show ("FairValue API listening on port …"), not the app's local default.
 - **Database → Supabase**: project `utildmwkhpmfbuasqhkt` (already provisioned). Run `schema.sql`, then `npm run seed`.
 
 ## What's stubbed for MVP
