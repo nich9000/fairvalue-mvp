@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DealCard from '../components/DealCard';
+import LandingAbout from '../components/LandingAbout';
+import TopDealsCarousel from '../components/TopDealsCarousel';
 import { MarketplaceListing, SearchFilters, SourceBreakdownEntry, searchListings } from '../lib/dealsApi';
 import { formatMultiple } from '../lib/format';
 
@@ -24,6 +26,7 @@ export default function DealSearch() {
   const [sourceBreakdown, setSourceBreakdown] = useState<SourceBreakdownEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [topDeals, setTopDeals] = useState<MarketplaceListing[]>([]);
 
   function runSearch(nextFilters: SearchFilters, append: boolean) {
     setLoading(true);
@@ -41,6 +44,11 @@ export default function DealSearch() {
 
   useEffect(() => {
     runSearch({ sort: 'deal_score', page: 1, limit: 20 }, false);
+    searchListings({ sort: 'deal_score', page: 1, limit: 9 })
+      .then((res) => setTopDeals(res.listings))
+      .catch(() => {
+        /* carousel is a bonus section on the landing page — fail silently rather than blocking search */
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,18 +69,24 @@ export default function DealSearch() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-4xl font-bold text-black">Find deals smarter</h1>
-        <Link to="/saved" className="text-sm font-semibold text-brand hover:text-brand-dark">
-          Saved deals →
-        </Link>
+    <div>
+      <div className="mx-auto max-w-4xl px-4 pt-12">
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-4xl font-bold text-black">Find deals smarter</h1>
+          <Link to="/saved" className="text-sm font-semibold text-brand hover:text-brand-dark">
+            Saved deals →
+          </Link>
+        </div>
+        <p className="mt-2 text-base text-gray-700">Search real e-commerce businesses from all marketplaces.</p>
+        <p className="mt-3 text-sm text-gray-500">
+          ✓ Real listings from Empire Flippers, Flippa, and Proprietor · ✓ Updated today
+        </p>
       </div>
-      <p className="mt-2 text-base text-gray-700">Search real e-commerce businesses from all marketplaces.</p>
-      <p className="mt-3 text-sm text-gray-500">
-        ✓ Real listings from Empire Flippers, Flippa, and Proprietor · ✓ Updated today
-      </p>
 
+      <LandingAbout />
+      <TopDealsCarousel deals={topDeals} />
+
+      <div className="mx-auto max-w-4xl px-4 py-12">
       <div className="mt-8 grid gap-4 border border-gray-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-3">
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-gray-600">Platform</span>
@@ -200,6 +214,7 @@ export default function DealSearch() {
           </ul>
         </div>
       )}
+      </div>
     </div>
   );
 }
