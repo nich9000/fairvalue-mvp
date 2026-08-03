@@ -20,7 +20,21 @@ router.get('/', requireAuth, async (req, res) => {
     results = results.filter((row: any) => row.marketplace_listings?.listing_status === status);
   }
 
-  res.json({ saved_deals: results });
+  const { data: segments } = await supabase.from('marketplace_pricing_index').select('platform, fulfillment_model, traffic_channel, median_multiple');
+  const segmentMap = new Map(
+    (segments ?? []).map((s) => [`${s.platform}|||${s.fulfillment_model}|||${s.traffic_channel}`, s.median_multiple])
+  );
+
+  const withSegment = results.map((row: any) => {
+    const l = row.marketplace_listings;
+    const segmentKey = l ? `${l.platform}|||${l.fulfillment_model}|||${l.traffic_channel}` : '';
+    return {
+      ...row,
+      marketplace_listings: l ? { ...l, segment_median_multiple: segmentMap.get(segmentKey) ?? null } : l,
+    };
+  });
+
+  res.json({ saved_deals: withSegment });
 });
 
 router.post('/', requireAuth, async (req, res) => {

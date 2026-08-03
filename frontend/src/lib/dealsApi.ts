@@ -21,6 +21,14 @@ export interface MarketplaceListing {
   listing_status: string;
   description: string | null;
   composite_score: number | null;
+  value_score: number | null;
+  segment_median_multiple: number | null;
+}
+
+export interface SourceBreakdownEntry {
+  source_marketplace: string;
+  count: number;
+  avg_multiple: number;
 }
 
 export interface PricingSegment {
@@ -60,6 +68,7 @@ export interface SearchResponse {
   total_count: number;
   page: number;
   has_next: boolean;
+  source_breakdown: SourceBreakdownEntry[];
 }
 
 export interface SavedDeal {

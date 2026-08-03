@@ -3,6 +3,16 @@ import { Link, useParams } from 'react-router-dom';
 import { getListingDetail, ListingDetail, saveDeal } from '../lib/dealsApi';
 import { formatCurrency, formatMultiple } from '../lib/format';
 import Auth from '../components/Auth';
+import Toast from '../components/Toast';
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-8 border-t border-gray-200 pt-6">
+      <h2 className="mb-3 text-sm font-semibold tracking-wide text-gray-500">{title}</h2>
+      {children}
+    </section>
+  );
+}
 
 export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -11,6 +21,7 @@ export default function DealDetail() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -27,6 +38,7 @@ export default function DealDetail() {
       await saveDeal(id!);
       setSaved(true);
       setSaveError(null);
+      setShowToast(true);
     } catch (err: any) {
       if (err?.response?.status === 401) {
         localStorage.removeItem('fairvalue_token');
@@ -55,117 +67,125 @@ export default function DealDetail() {
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
   if (!listing) return <div className="p-8 text-center text-gray-500">Loading deal…</div>;
 
-  const vsMarket = listing.comparable_segment
-    ? ((listing.multiple_achieved - listing.comparable_segment.median_multiple) / listing.comparable_segment.median_multiple) * 100
-    : null;
+  const segment = listing.comparable_segment;
+  const vsMarketPct = segment ? ((listing.multiple_achieved - segment.median_multiple) / segment.median_multiple) * 100 : null;
+  const marketImpliedPrice = segment ? listing.annual_revenue * segment.median_multiple : null;
+  const savings = marketImpliedPrice !== null ? marketImpliedPrice - listing.listing_price : null;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <Link to="/deals" className="text-sm font-medium text-emerald-600 hover:text-emerald-700">
+      <Link to="/deals" className="text-sm font-semibold text-brand hover:text-brand-dark">
         ← Back to search
       </Link>
 
-      <h1 className="mt-2 text-2xl font-bold text-gray-900">
+      <h1 className="mt-3 text-2xl font-bold text-black">
         {listing.niche_category ?? 'E-commerce business'} <span className="text-gray-400">·</span> {listing.platform}
       </h1>
 
-      <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
-        <h2 className="mb-3 text-sm font-semibold text-gray-500">THE DEAL</h2>
-        <dl className="grid grid-cols-2 gap-y-2 text-sm">
-          <dt className="text-gray-500">Asking price</dt>
-          <dd className="text-right font-semibold text-gray-900">{formatCurrency(listing.listing_price)}</dd>
-          <dt className="text-gray-500">Annual revenue</dt>
-          <dd className="text-right font-semibold text-gray-900">{formatCurrency(listing.annual_revenue)}</dd>
-          <dt className="text-gray-500">Multiple</dt>
-          <dd className="text-right font-semibold text-gray-900">{formatMultiple(listing.multiple_achieved)}</dd>
-          {vsMarket !== null && (
+      <Section title="THE DEAL">
+        <p className="text-3xl font-bold text-black">{formatCurrency(listing.listing_price)}</p>
+        <p className="text-sm text-gray-500">Asking price</p>
+
+        <dl className="mt-4 grid grid-cols-2 gap-y-2 text-sm">
+          <dt className="text-gray-600">Annual revenue</dt>
+          <dd className="text-right font-semibold text-black">{formatCurrency(listing.annual_revenue)}</dd>
+          <dt className="text-gray-600">Multiple</dt>
+          <dd className="text-right font-semibold text-black">{formatMultiple(listing.multiple_achieved)}</dd>
+          {segment && (
             <>
-              <dt className="text-gray-500">vs. segment median ({formatMultiple(listing.comparable_segment!.median_multiple)})</dt>
-              <dd className={`text-right font-semibold ${vsMarket <= 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {vsMarket <= 0 ? '' : '+'}
-                {vsMarket.toFixed(0)}% {vsMarket <= 0 ? '(good value)' : ''}
-              </dd>
+              <dt className="text-gray-600">Market average ({listing.platform} + {listing.fulfillment_model})</dt>
+              <dd className="text-right font-semibold text-black">{formatMultiple(segment.median_multiple)}</dd>
             </>
           )}
           {listing.annual_profit !== null && (
             <>
-              <dt className="text-gray-500">Annual profit</dt>
-              <dd className="text-right font-semibold text-gray-900">
+              <dt className="text-gray-600">Annual profit</dt>
+              <dd className="text-right font-semibold text-black">
                 {formatCurrency(listing.annual_profit)}
                 {listing.profit_margin_pct !== null ? ` (${listing.profit_margin_pct.toFixed(0)}%)` : ''}
               </dd>
             </>
           )}
         </dl>
-      </section>
 
-      <section className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
-        <h2 className="mb-3 text-sm font-semibold text-gray-500">FUNDAMENTALS</h2>
+        {savings !== null && vsMarketPct !== null && (
+          <p className={`mt-3 text-sm font-semibold ${savings >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {savings >= 0 ? `✓ SAVINGS: ${formatCurrency(savings)}` : `ABOVE MARKET: ${formatCurrency(Math.abs(savings))}`} (
+            {vsMarketPct >= 0 ? '+' : ''}
+            {vsMarketPct.toFixed(0)}% vs. market multiple)
+          </p>
+        )}
+      </Section>
+
+      <Section title="FUNDAMENTALS">
         <dl className="grid grid-cols-2 gap-y-2 text-sm">
-          <dt className="text-gray-500">Fulfillment</dt>
-          <dd className="text-right text-gray-900">{listing.fulfillment_model ?? '—'}</dd>
-          <dt className="text-gray-500">Traffic channel</dt>
-          <dd className="text-right text-gray-900">{listing.traffic_channel ?? '—'}</dd>
-          <dt className="text-gray-500">Data quality score</dt>
-          <dd className="text-right text-gray-900">{listing.data_completeness_score ?? '—'}/100</dd>
-          <dt className="text-gray-500">Status</dt>
-          <dd className="text-right capitalize text-gray-900">{listing.listing_status}</dd>
+          <dt className="text-gray-600">Fulfillment</dt>
+          <dd className="text-right text-black">{listing.fulfillment_model ?? '—'}</dd>
+          <dt className="text-gray-600">Traffic channel</dt>
+          <dd className="text-right text-black">{listing.traffic_channel ?? '—'}</dd>
+          <dt className="text-gray-600">Data quality score</dt>
+          <dd className="text-right text-black">{listing.data_completeness_score ?? '—'}/100</dd>
+          <dt className="text-gray-600">Status</dt>
+          <dd className="text-right capitalize text-black">{listing.listing_status}</dd>
         </dl>
-      </section>
+      </Section>
 
-      {listing.comparable_segment && (
-        <section className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-semibold text-gray-500">COMPARABLE ANALYSIS</h2>
+      {segment && (
+        <Section title="COMPARABLE DEALS">
           <p className="text-sm text-gray-700">
-            Similar {listing.platform} + {listing.fulfillment_model} + {listing.traffic_channel} businesses ({listing.comparable_segment.sample_size} comps):
+            Based on {segment.sample_size} similar {listing.platform} + {listing.fulfillment_model} + {listing.traffic_channel} businesses:
           </p>
           <p className="mt-1 text-sm text-gray-700">
-            Median multiple <strong>{formatMultiple(listing.comparable_segment.median_multiple)}</strong>, range{' '}
-            {formatMultiple(listing.comparable_segment.min_multiple ?? 0)}–{formatMultiple(listing.comparable_segment.max_multiple ?? 0)}.
+            Median multiple <strong className="text-black">{formatMultiple(segment.median_multiple)}</strong>, range{' '}
+            {formatMultiple(segment.min_multiple ?? 0)}–{formatMultiple(segment.max_multiple ?? 0)}
           </p>
-        </section>
+          {vsMarketPct !== null && (
+            <p className={`mt-1 text-sm font-semibold ${vsMarketPct <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              This deal: {formatMultiple(listing.multiple_achieved)} = {vsMarketPct <= 0 ? '' : '+'}
+              {vsMarketPct.toFixed(0)}% {vsMarketPct <= 0 ? 'below market ✓' : 'above market'}
+            </p>
+          )}
+        </Section>
       )}
 
       {listing.risk_factors.length > 0 && (
-        <section className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <h2 className="mb-2 text-sm font-semibold text-amber-800">⚠ RISK FACTORS</h2>
-          <ul className="list-inside list-disc space-y-1 text-sm text-amber-900">
+        <Section title="RISK FACTORS">
+          <ul className="list-inside list-disc space-y-1 text-sm text-gray-700">
             {listing.risk_factors.map((r) => (
               <li key={r}>{r}</li>
             ))}
           </ul>
-        </section>
+        </Section>
       )}
 
       {listing.improvement_potential.length > 0 && (
-        <section className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-          <h2 className="mb-2 text-sm font-semibold text-emerald-800">🚀 IMPROVEMENT POTENTIAL</h2>
+        <Section title="UPSIDE POTENTIAL">
           {listing.improvement_potential.map((op) => (
-            <p key={op.scenario} className="text-sm text-emerald-900">
-              {op.scenario}: business could be worth ~{formatCurrency(op.potential_value)}
+            <p key={op.scenario} className="text-sm text-gray-700">
+              {op.scenario}: business could be worth ~<span className="font-semibold text-black">{formatCurrency(op.potential_value)}</span>
             </p>
           ))}
-        </section>
+        </Section>
       )}
 
-      <section className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
-        <h2 className="mb-2 text-sm font-semibold text-gray-500">LISTING SOURCE</h2>
+      <Section title="LISTING SOURCE">
         <p className="text-sm capitalize text-gray-700">{listing.source_marketplace.replace('_', ' ')}</p>
         {listing.listed_date && <p className="text-xs text-gray-500">Listed {listing.listed_date}</p>}
-        {listing.description && <p className="mt-2 text-sm text-gray-600">{listing.description}</p>}
-      </section>
+        {listing.description && <p className="mt-2 text-sm text-gray-700">{listing.description}</p>}
+      </Section>
 
       <button
         type="button"
         onClick={handleSave}
         disabled={saved}
-        className="mt-6 w-full rounded-lg border border-emerald-600 py-3 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"
+        className="mt-8 w-full border border-brand py-3 text-sm font-semibold text-brand hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400"
       >
         {saved ? 'Saved to your account' : 'Save for later'}
       </button>
       {saveError && <p className="mt-2 text-sm text-red-600">{saveError}</p>}
 
       {showAuth && <Auth onSuccess={handleAuthSuccess} onClose={() => setShowAuth(false)} />}
+      {showToast && <Toast message="Deal saved" onDismiss={() => setShowToast(false)} />}
     </div>
   );
 }

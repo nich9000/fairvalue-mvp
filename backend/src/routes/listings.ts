@@ -32,13 +32,29 @@ router.get('/', async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
 
   const ids = (listings ?? []).map((l) => l.id);
-  const { data: rankings } = await supabase
-    .from('deal_rankings')
-    .select('listing_id, composite_score')
-    .in('listing_id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
+  const [{ data: rankings }, { data: segments }] = await Promise.all([
+    supabase
+      .from('deal_rankings')
+      .select('listing_id, composite_score, value_score')
+      .in('listing_id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']),
+    supabase.from('marketplace_pricing_index').select('platform, fulfillment_model, traffic_channel, median_multiple'),
+  ]);
 
-  const rankingMap = new Map((rankings ?? []).map((r) => [r.listing_id, r.composite_score]));
-  const merged = (listings ?? []).map((l) => ({ ...l, composite_score: rankingMap.get(l.id) ?? null }));
+  const rankingMap = new Map((rankings ?? []).map((r) => [r.listing_id, r]));
+  const segmentMap = new Map(
+    (segments ?? []).map((s) => [`${s.platform}|||${s.fulfillment_model}|||${s.traffic_channel}`, s.median_multiple])
+  );
+
+  const merged = (listings ?? []).map((l) => {
+    const ranking = rankingMap.get(l.id);
+    const segmentKey = `${l.platform}|||${l.fulfillment_model}|||${l.traffic_channel}`;
+    return {
+      ...l,
+      composite_score: ranking?.composite_score ?? null,
+      value_score: ranking?.value_score ?? null,
+      segment_median_multiple: segmentMap.get(segmentKey) ?? null,
+    };
+  });
 
   const sortKey = (sort as string) || 'deal_score';
   merged.sort((a, b) => {
@@ -52,11 +68,25 @@ router.get('/', async (req, res) => {
   const start = (pageNum - 1) * limitNum;
   const paged = merged.slice(start, start + limitNum);
 
+  const bySource = new Map<string, { count: number; totalMultiple: number }>();
+  for (const l of merged) {
+    const entry = bySource.get(l.source_marketplace) ?? { count: 0, totalMultiple: 0 };
+    entry.count += 1;
+    entry.totalMultiple += Number(l.multiple_achieved);
+    bySource.set(l.source_marketplace, entry);
+  }
+  const source_breakdown = Array.from(bySource.entries()).map(([source_marketplace, { count, totalMultiple }]) => ({
+    source_marketplace,
+    count,
+    avg_multiple: totalMultiple / count,
+  }));
+
   res.json({
     listings: paged,
     total_count: merged.length,
     page: pageNum,
     has_next: start + limitNum < merged.length,
+    source_breakdown,
   });
 });
 
