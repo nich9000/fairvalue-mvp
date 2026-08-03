@@ -17,9 +17,16 @@ export default function Landing() {
           Get Free Valuation
         </Link>
         <p className="mt-6 text-sm text-gray-500">300+ stores valued</p>
+        <Link to="/deals" className="mt-3 text-sm font-medium text-emerald-700 hover:text-emerald-800">
+          Or browse e-commerce businesses for sale →
+        </Link>
       </main>
       <footer className="border-t border-gray-100 py-6 text-center text-sm text-gray-400">
         <span>FairValue</span>
+        <span className="mx-2">·</span>
+        <Link to="/deals" className="hover:text-gray-600">
+          Browse deals
+        </Link>
         <span className="mx-2">·</span>
         <Link to="/dashboard" className="hover:text-gray-600">
           Log in

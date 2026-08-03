@@ -7,6 +7,9 @@ import authRouter from './routes/auth';
 import storesRouter from './routes/stores';
 import valuationsRouter from './routes/valuations';
 import compsRouter from './routes/comps';
+import listingsRouter from './routes/listings';
+import marketplaceIndexRouter from './routes/marketplaceIndex';
+import savedDealsRouter from './routes/savedDeals';
 
 dotenv.config();
 
@@ -22,6 +25,9 @@ app.use('/api/auth', authRouter);
 app.use('/api/stores', storesRouter);
 app.use('/api/valuations', valuationsRouter);
 app.use('/api/comps', compsRouter);
+app.use('/api/listings', listingsRouter);
+app.use('/api/marketplace-index', marketplaceIndexRouter);
+app.use('/api/users/saved-deals', savedDealsRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
