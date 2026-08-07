@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "seed": "ts-node src/db/seed.ts",
     "seed:listings": "ts-node src/db/seedListings.ts",
+    "fetch:ef": "ts-node src/db/fetchEmpireFlippers.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -100,7 +100,9 @@ export default function DealDetail() {
   }
 
   const sourceLabel = SOURCE_LABEL[listing.source_marketplace] ?? listing.source_marketplace;
-  const homepage = MARKETPLACE_HOMEPAGE[listing.source_marketplace];
+  // Prefer the real listing URL when we have one (live-sourced data); fall back to the
+  // marketplace homepage for rows without a real source_url (still-synthetic sample data).
+  const listingLink = listing.source_url || MARKETPLACE_HOMEPAGE[listing.source_marketplace];
   const ago = timeAgo(listing.listed_date);
   const comparables = listing.comparable_listings;
   const compMultiples = comparables.map((c) => c.multiple_achieved);
@@ -211,8 +213,8 @@ export default function DealDetail() {
         </div>
 
         <div className="detail-sidebar">
-          {homepage && (
-            <a href={homepage} target="_blank" rel="noreferrer" className="btn btn-primary btn-block">
+          {listingLink && (
+            <a href={listingLink} target="_blank" rel="noreferrer" className="btn btn-primary btn-block">
               View on {sourceLabel} →
             </a>
           )}
