@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase } from '../db/supabase';
 import { optionalAuth } from '../middleware/optionalAuth';
 import { categoryBucket } from '../lib/categoryBucket';
+import { expandPlatformDisplayNames, platformDisplayBuckets } from '../lib/platformGroups';
 
 const router = Router();
 
@@ -17,37 +18,17 @@ function buildRiskFactors(listing: any): string[] {
   return RISK_FACTOR_RULES.filter((rule) => rule.test(listing)).map((rule) => rule.text);
 }
 
-// "Amazon FBA / Shopify" isn't a platform of its own — it's a handful of multi-channel
-// businesses that run on both. Rather than a 6th sidebar bucket, those listings count toward
-// (and are matched by) both "Amazon FBA" and "Shopify", so the filter list stays to 5 platforms.
-const PLATFORM_DISPLAY_GROUPS: Record<string, string[]> = {
-  'Amazon FBA': ['Amazon FBA', 'Amazon FBA / Shopify'],
-  Shopify: ['Shopify', 'Amazon FBA / Shopify'],
-};
-
-function platformDisplayBuckets(rawPlatform: string): string[] {
-  const buckets = Object.entries(PLATFORM_DISPLAY_GROUPS)
-    .filter(([, rawValues]) => rawValues.includes(rawPlatform))
-    .map(([display]) => display);
-  return buckets.length ? buckets : [rawPlatform];
-}
-
 router.get('/', async (req, res) => {
   const { platform, niche, revenue_min, revenue_max, fulfillment, traffic, marketplace, category, multiple_min, multiple_max, sort, page, limit } =
     req.query;
 
   let query = supabase.from('marketplace_listings').select('*').eq('listing_status', 'active');
 
+  // "|" not "," — several category bucket names (e.g. "Toys, Games & Hobbies") contain a
+  // literal comma, which would otherwise collide with the multi-select join delimiter.
   if (platform) {
-    const requested = (platform as string).split(',').filter(Boolean);
-    // Expand display platforms ("Amazon FBA", "Shopify") to the raw DB values they cover,
-    // since a multi-channel listing's raw platform is the combined "Amazon FBA / Shopify".
-    const rawValues = new Set<string>();
-    for (const p of requested) {
-      if (PLATFORM_DISPLAY_GROUPS[p]) PLATFORM_DISPLAY_GROUPS[p].forEach((v) => rawValues.add(v));
-      else rawValues.add(p);
-    }
-    if (rawValues.size) query = query.in('platform', Array.from(rawValues));
+    const rawValues = expandPlatformDisplayNames((platform as string).split('|').filter(Boolean));
+    if (rawValues.length) query = query.in('platform', rawValues);
   }
   if (niche) query = query.ilike('niche_category', `%${niche}%`);
   if (fulfillment) query = query.eq('fulfillment_model', fulfillment as string);
@@ -57,7 +38,7 @@ router.get('/', async (req, res) => {
   if (multiple_min) query = query.gte('multiple_achieved', Number(multiple_min));
   if (multiple_max) query = query.lte('multiple_achieved', Number(multiple_max));
   if (marketplace) {
-    const marketplaces = (marketplace as string).split(',').filter(Boolean);
+    const marketplaces = (marketplace as string).split('|').filter(Boolean);
     if (marketplaces.length) query = query.in('source_marketplace', marketplaces);
   }
 
@@ -68,7 +49,7 @@ router.get('/', async (req, res) => {
   // no DB column for it, so this filter is applied in JS after the Supabase query runs.
   let listings = rawListings ?? [];
   if (category) {
-    const categories = (category as string).split(',').filter(Boolean);
+    const categories = (category as string).split('|').filter(Boolean);
     if (categories.length) listings = listings.filter((l) => categories.includes(categoryBucket(l.niche_category)));
   }
 

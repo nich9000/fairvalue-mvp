@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import Auth from '../components/Auth';
 import Nav from '../components/Nav';
 import Toast from '../components/Toast';
-import { CategoryCountEntry, MarketplaceCountEntry, MarketplaceListing, PlatformCountEntry, SearchFilters, getSavedDeals, saveDeal, searchListings, unsaveDeal } from '../lib/dealsApi';
+import { CategoryCountEntry, MarketplaceCountEntry, MarketplaceListing, PlatformCountEntry, SearchFilters, createTrackedNiche, getSavedDeals, saveDeal, searchListings, unsaveDeal } from '../lib/dealsApi';
 import { formatCurrency, formatMultiple } from '../lib/format';
 import { CategoryIcon, CategoryIconByBucket, PlatformIcon } from '../lib/icons';
 
@@ -76,6 +76,8 @@ export default function SearchResults() {
   const [pendingSaveId, setPendingSaveId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [showTrackAuth, setShowTrackAuth] = useState(false);
+  const [tracking, setTracking] = useState(false);
 
   useEffect(() => {
     if (!mobileFilterOpen) return;
@@ -135,9 +137,11 @@ export default function SearchResults() {
   }
 
   const niche = searchParams.get('niche') ?? '';
-  const selectedMarketplaces = searchParams.get('marketplace')?.split(',').filter(Boolean) ?? [];
-  const selectedPlatforms = searchParams.get('platform')?.split(',').filter(Boolean) ?? [];
-  const selectedCategories = searchParams.get('category')?.split(',').filter(Boolean) ?? [];
+  // "|" not "," — several category bucket names (e.g. "Toys, Games & Hobbies") contain a
+  // literal comma, which would otherwise collide with the multi-select join delimiter.
+  const selectedMarketplaces = searchParams.get('marketplace')?.split('|').filter(Boolean) ?? [];
+  const selectedPlatforms = searchParams.get('platform')?.split('|').filter(Boolean) ?? [];
+  const selectedCategories = searchParams.get('category')?.split('|').filter(Boolean) ?? [];
   const sort = (searchParams.get('sort') as SearchFilters['sort']) ?? 'listed_date';
   const page = Number(searchParams.get('page') ?? '1');
 
@@ -153,9 +157,9 @@ export default function SearchResults() {
   useEffect(() => {
     const filters: SearchFilters = {
       niche: niche || undefined,
-      platform: selectedPlatforms.length ? selectedPlatforms.join(',') : undefined,
-      marketplace: selectedMarketplaces.length ? selectedMarketplaces.join(',') : undefined,
-      category: selectedCategories.length ? selectedCategories.join(',') : undefined,
+      platform: selectedPlatforms.length ? selectedPlatforms.join('|') : undefined,
+      marketplace: selectedMarketplaces.length ? selectedMarketplaces.join('|') : undefined,
+      category: selectedCategories.length ? selectedCategories.join('|') : undefined,
       revenue_min: searchParams.get('revenue_min') ? Number(searchParams.get('revenue_min')) : undefined,
       revenue_max: searchParams.get('revenue_max') ? Number(searchParams.get('revenue_max')) : undefined,
       multiple_min: searchParams.get('multiple_min') ? Number(searchParams.get('multiple_min')) : undefined,
@@ -192,7 +196,7 @@ export default function SearchResults() {
 
   function toggleInList(param: string, current: string[], value: string) {
     const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
-    updateParams({ [param]: next.length ? next.join(',') : null });
+    updateParams({ [param]: next.length ? next.join('|') : null });
   }
 
   function handleSearchSubmit(e: React.FormEvent) {
@@ -211,6 +215,52 @@ export default function SearchResults() {
 
   function clearFilters() {
     setSearchParams(new URLSearchParams());
+  }
+
+  function buildTrackedNicheLabel(): string {
+    const parts: string[] = [];
+    if (selectedPlatforms.length) parts.push(selectedPlatforms.join(' / '));
+    if (selectedCategories.length) parts.push(selectedCategories.join(' / '));
+    if (niche) parts.push(`"${niche}"`);
+    if (!parts.length && selectedMarketplaces.length) {
+      parts.push(selectedMarketplaces.map((m) => SOURCE_LABEL[m] ?? m).join(' / '));
+    }
+    return parts.length ? parts.join(' · ') : 'All listings';
+  }
+
+  async function doTrackSearch() {
+    setTracking(true);
+    try {
+      await createTrackedNiche({
+        label: buildTrackedNicheLabel(),
+        marketplace: selectedMarketplaces.length ? selectedMarketplaces.join('|') : undefined,
+        platform: selectedPlatforms.length ? selectedPlatforms.join('|') : undefined,
+        category: selectedCategories.length ? selectedCategories.join('|') : undefined,
+        niche: niche || undefined,
+        revenue_min: revenueMin ? Number(revenueMin) : undefined,
+        revenue_max: revenueMax ? Number(revenueMax) : undefined,
+        multiple_min: multipleMin ? Number(multipleMin) : undefined,
+        multiple_max: multipleMax ? Number(multipleMax) : undefined,
+      });
+      setToastMessage('Niche tracked — see it on your dashboard');
+    } catch {
+      setToastMessage('Could not track this search. Please try again.');
+    } finally {
+      setTracking(false);
+    }
+  }
+
+  function handleTrackClick() {
+    if (!localStorage.getItem('fairvalue_token')) {
+      setShowTrackAuth(true);
+      return;
+    }
+    doTrackSearch();
+  }
+
+  async function handleTrackAuthSuccess() {
+    setShowTrackAuth(false);
+    await doTrackSearch();
   }
 
   const summaryParts: string[] = [];
@@ -359,13 +409,22 @@ export default function SearchResults() {
             <div>
               <strong>{totalCount} results</strong> <span className="text-muted">· {summaryParts.join(', ')}</span>
             </div>
-            <select className="input" style={{ width: 'auto' }} value={sort} onChange={(e) => updateParams({ sort: e.target.value })}>
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <button type="button" className="btn btn-ghost" style={{ fontSize: 13 }} disabled={tracking} onClick={handleTrackClick}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                Track this search
+              </button>
+              <select className="input" style={{ width: 'auto' }} value={sort} onChange={(e) => updateParams({ sort: e.target.value })}>
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {error && <p style={{ color: '#b3261e' }}>{error}</p>}
@@ -485,6 +544,7 @@ export default function SearchResults() {
       )}
 
       {pendingSaveId && <Auth onSuccess={handleAuthSuccess} onClose={() => setPendingSaveId(null)} />}
+      {showTrackAuth && <Auth onSuccess={handleTrackAuthSuccess} onClose={() => setShowTrackAuth(false)} />}
       {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
     </div>
   );

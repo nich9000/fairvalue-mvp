@@ -10,6 +10,7 @@ import compsRouter from './routes/comps';
 import listingsRouter from './routes/listings';
 import marketplaceIndexRouter from './routes/marketplaceIndex';
 import savedDealsRouter from './routes/savedDeals';
+import trackedNichesRouter from './routes/trackedNiches';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/comps', compsRouter);
 app.use('/api/listings', listingsRouter);
 app.use('/api/marketplace-index', marketplaceIndexRouter);
 app.use('/api/users/saved-deals', savedDealsRouter);
+app.use('/api/users/tracked-niches', trackedNichesRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });

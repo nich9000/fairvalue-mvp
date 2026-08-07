@@ -92,3 +92,26 @@ create table if not exists user_saved_deals (
 
 create index if not exists idx_user_saved_deals_user on user_saved_deals(user_id);
 create index if not exists idx_user_saved_deals_listing on user_saved_deals(listing_id);
+
+-- A tracked niche is a saved search: the same filter shape the /api/listings endpoint
+-- accepts (comma-joined text for multi-select fields), re-evaluated on read against current
+-- active listings to surface a "new this week" count. No email/push delivery yet — see
+-- README "What's stubbed for MVP".
+create table if not exists user_tracked_niches (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+
+  label varchar not null,
+  marketplace varchar,
+  platform varchar,
+  category varchar,
+  niche varchar,
+  revenue_min decimal,
+  revenue_max decimal,
+  multiple_min decimal,
+  multiple_max decimal,
+
+  created_at timestamp default current_timestamp
+);
+
+create index if not exists idx_user_tracked_niches_user on user_tracked_niches(user_id);

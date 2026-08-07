@@ -113,6 +113,34 @@ export interface SavedDeal {
   marketplace_listings: MarketplaceListing;
 }
 
+export interface TrackedNiche {
+  id: string;
+  label: string;
+  marketplace: string | null;
+  platform: string | null;
+  category: string | null;
+  niche: string | null;
+  revenue_min: number | null;
+  revenue_max: number | null;
+  multiple_min: number | null;
+  multiple_max: number | null;
+  created_at: string;
+  matching_count: number;
+  new_this_week: number;
+}
+
+export interface CreateTrackedNichePayload {
+  label: string;
+  marketplace?: string;
+  platform?: string;
+  category?: string;
+  niche?: string;
+  revenue_min?: number;
+  revenue_max?: number;
+  multiple_min?: number;
+  multiple_max?: number;
+}
+
 export async function searchListings(filters: SearchFilters) {
   const { data } = await api.get<SearchResponse>('/api/listings', { params: filters });
   return data;
@@ -137,5 +165,20 @@ export async function saveDeal(listing_id: string, notes?: string) {
 
 export async function unsaveDeal(listing_id: string) {
   const { data } = await api.delete(`/api/users/saved-deals/${listing_id}`);
+  return data;
+}
+
+export async function getTrackedNiches() {
+  const { data } = await api.get<{ tracked_niches: TrackedNiche[] }>('/api/users/tracked-niches');
+  return data.tracked_niches;
+}
+
+export async function createTrackedNiche(payload: CreateTrackedNichePayload) {
+  const { data } = await api.post('/api/users/tracked-niches', payload);
+  return data;
+}
+
+export async function deleteTrackedNiche(id: string) {
+  const { data } = await api.delete(`/api/users/tracked-niches/${id}`);
   return data;
 }
