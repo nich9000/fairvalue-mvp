@@ -1,17 +1,33 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import Auth from '../components/Auth';
+import Nav from '../components/Nav';
+import Toast from '../components/Toast';
 import { getListingDetail, ListingDetail, saveDeal } from '../lib/dealsApi';
 import { formatCurrency, formatMultiple } from '../lib/format';
-import Auth from '../components/Auth';
-import Toast from '../components/Toast';
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="mt-8 border-t border-gray-200 pt-6">
-      <h2 className="mb-3 text-sm font-semibold tracking-wide text-gray-500">{title}</h2>
-      {children}
-    </section>
-  );
+const SOURCE_LABEL: Record<string, string> = {
+  empire_flippers: 'Empire Flippers',
+  flippa: 'Flippa',
+  proprietor: 'Proprietor',
+};
+
+const MARKETPLACE_HOMEPAGE: Record<string, string> = {
+  empire_flippers: 'https://empireflippers.com',
+  flippa: 'https://flippa.com',
+  proprietor: 'https://www.proprietor.com',
+};
+
+function timeAgo(dateStr: string | null): string | null {
+  if (!dateStr) return null;
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+  if (days < 1) return 'today';
+  if (days < 2) return '1 day ago';
+  if (days < 30) return `${days} days ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`;
+  const years = Math.floor(months / 12);
+  return `${years} year${years > 1 ? 's' : ''} ago`;
 }
 
 export default function DealDetail() {
@@ -64,125 +80,154 @@ export default function DealDetail() {
     await doSave();
   }
 
-  if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
-  if (!listing) return <div className="p-8 text-center text-gray-500">Loading deal…</div>;
+  if (error) {
+    return (
+      <div className="bs" style={{ minHeight: '100vh' }}>
+        <Nav current="none" />
+        <p style={{ padding: 'var(--space-6) var(--space-4)', textAlign: 'center' }}>{error}</p>
+      </div>
+    );
+  }
+  if (!listing) {
+    return (
+      <div className="bs" style={{ minHeight: '100vh' }}>
+        <Nav current="none" />
+        <p className="text-muted" style={{ padding: 'var(--space-6) var(--space-4)', textAlign: 'center' }}>
+          Loading deal…
+        </p>
+      </div>
+    );
+  }
 
-  const segment = listing.comparable_segment;
-  const vsMarketPct = segment ? ((listing.multiple_achieved - segment.median_multiple) / segment.median_multiple) * 100 : null;
-  const marketImpliedPrice = segment ? listing.annual_revenue * segment.median_multiple : null;
-  const savings = marketImpliedPrice !== null ? marketImpliedPrice - listing.listing_price : null;
+  const sourceLabel = SOURCE_LABEL[listing.source_marketplace] ?? listing.source_marketplace;
+  const homepage = MARKETPLACE_HOMEPAGE[listing.source_marketplace];
+  const ago = timeAgo(listing.listed_date);
+  const comparables = listing.comparable_listings;
+  const compMultiples = comparables.map((c) => c.multiple_achieved);
+  const compMin = compMultiples.length ? Math.min(...compMultiples) : null;
+  const compMax = compMultiples.length ? Math.max(...compMultiples) : null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <Link to="/deals" className="text-sm font-semibold text-brand hover:text-brand-dark">
-        ← Back to search
-      </Link>
+    <div className="bs" style={{ minHeight: '100vh' }}>
+      <Nav current="none" />
 
-      <h1 className="mt-3 text-2xl font-bold text-black">
-        {listing.niche_category ?? 'E-commerce business'} <span className="text-gray-400">·</span> {listing.platform}
-      </h1>
+      <div className="text-muted" style={{ maxWidth: 1120, margin: '0 auto', padding: 'var(--space-4) var(--space-4) 0', fontSize: 13 }}>
+        <Link to="/deals/results">Search</Link> / {listing.platform} / {listing.niche_category ?? 'E-commerce business'}
+      </div>
 
-      <Section title="THE DEAL">
-        <p className="text-3xl font-bold text-black">{formatCurrency(listing.listing_price)}</p>
-        <p className="text-sm text-gray-500">Asking price</p>
+      <div className="detail-grid" style={{ maxWidth: 1120, margin: '0 auto', padding: '20px 20px 60px' }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="card-kicker" style={{ marginBottom: 'var(--space-2)' }}>
+            {sourceLabel} · {listing.platform} · {listing.niche_category ?? 'General'} ·{' '}
+            <span className="tag tag-outline">{listing.listing_status === 'sold' ? 'Sold' : 'Active listing'}</span>
+          </div>
+          <h1 style={{ marginBottom: 'var(--space-1)' }}>{listing.niche_category ?? 'E-commerce business'}</h1>
+          <div className="text-muted" style={{ fontSize: 14, marginBottom: 'var(--space-4)' }}>
+            {ago ? `Listed ${ago} on ${sourceLabel}` : `Listed on ${sourceLabel}`}
+          </div>
+          <div className="img-placeholder" style={{ width: '100%', height: 280, marginBottom: 'var(--space-6)' }} />
 
-        <dl className="mt-4 grid grid-cols-2 gap-y-2 text-sm">
-          <dt className="text-gray-600">Annual revenue</dt>
-          <dd className="text-right font-semibold text-black">{formatCurrency(listing.annual_revenue)}</dd>
-          <dt className="text-gray-600">Multiple</dt>
-          <dd className="text-right font-semibold text-black">{formatMultiple(listing.multiple_achieved)}</dd>
-          {segment && (
-            <>
-              <dt className="text-gray-600">Market average ({listing.platform} + {listing.fulfillment_model})</dt>
-              <dd className="text-right font-semibold text-black">{formatMultiple(segment.median_multiple)}</dd>
-            </>
-          )}
-          {listing.annual_profit !== null && (
-            <>
-              <dt className="text-gray-600">Annual profit</dt>
-              <dd className="text-right font-semibold text-black">
-                {formatCurrency(listing.annual_profit)}
-                {listing.profit_margin_pct !== null ? ` (${listing.profit_margin_pct.toFixed(0)}%)` : ''}
-              </dd>
-            </>
-          )}
-        </dl>
+          <div style={{ marginBottom: 'var(--space-6)' }}>
+            <h6 style={{ marginBottom: 'var(--space-3)' }}>Key metrics</h6>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 'var(--space-4)' }}>
+              <div>
+                <div className="card-meta">Asking price</div>
+                <div style={{ fontSize: 22, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{formatCurrency(listing.listing_price)}</div>
+              </div>
+              <div>
+                <div className="card-meta">TTM revenue</div>
+                <div style={{ fontSize: 22, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{formatCurrency(listing.annual_revenue)}</div>
+              </div>
+              <div>
+                <div className="card-meta">TTM profit</div>
+                <div style={{ fontSize: 22, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>
+                  {listing.annual_profit !== null ? formatCurrency(listing.annual_profit) : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="card-meta">Multiple</div>
+                <div style={{ fontSize: 22, fontFamily: 'var(--font-heading)', fontWeight: 600, color: 'var(--color-accent-700)' }}>
+                  {formatMultiple(listing.multiple_achieved)}
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {savings !== null && vsMarketPct !== null && (
-          <p className={`mt-3 text-sm font-semibold ${savings >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {savings >= 0 ? `✓ SAVINGS: ${formatCurrency(savings)}` : `ABOVE MARKET: ${formatCurrency(Math.abs(savings))}`} (
-            {vsMarketPct >= 0 ? '+' : ''}
-            {vsMarketPct.toFixed(0)}% vs. market multiple)
-          </p>
-        )}
-      </Section>
-
-      <Section title="FUNDAMENTALS">
-        <dl className="grid grid-cols-2 gap-y-2 text-sm">
-          <dt className="text-gray-600">Fulfillment</dt>
-          <dd className="text-right text-black">{listing.fulfillment_model ?? '—'}</dd>
-          <dt className="text-gray-600">Traffic channel</dt>
-          <dd className="text-right text-black">{listing.traffic_channel ?? '—'}</dd>
-          <dt className="text-gray-600">Data quality score</dt>
-          <dd className="text-right text-black">{listing.data_completeness_score ?? '—'}/100</dd>
-          <dt className="text-gray-600">Status</dt>
-          <dd className="text-right capitalize text-black">{listing.listing_status}</dd>
-        </dl>
-      </Section>
-
-      {segment && (
-        <Section title="COMPARABLE DEALS">
-          <p className="text-sm text-gray-700">
-            Based on {segment.sample_size} similar {listing.platform} + {listing.fulfillment_model} + {listing.traffic_channel} businesses:
-          </p>
-          <p className="mt-1 text-sm text-gray-700">
-            Median multiple <strong className="text-black">{formatMultiple(segment.median_multiple)}</strong>, range{' '}
-            {formatMultiple(segment.min_multiple ?? 0)}–{formatMultiple(segment.max_multiple ?? 0)}
-          </p>
-          {vsMarketPct !== null && (
-            <p className={`mt-1 text-sm font-semibold ${vsMarketPct <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              This deal: {formatMultiple(listing.multiple_achieved)} = {vsMarketPct <= 0 ? '' : '+'}
-              {vsMarketPct.toFixed(0)}% {vsMarketPct <= 0 ? 'below market ✓' : 'above market'}
+          <div style={{ marginBottom: 'var(--space-6)' }}>
+            <h6 style={{ marginBottom: 'var(--space-1)' }}>Comparable sales</h6>
+            <p className="text-muted" style={{ fontSize: 13.5, marginBottom: 'var(--space-3)' }}>
+              Similar {listing.platform} businesses from the same segment.
             </p>
+            {comparables.length > 0 ? (
+              <>
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                  <table className="table" style={{ minWidth: 480 }}>
+                    <thead>
+                      <tr>
+                        <th>Business</th>
+                        <th>Source</th>
+                        <th>Price</th>
+                        <th>TTM rev</th>
+                        <th>Multiple</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comparables.map((c) => (
+                        <tr key={c.id}>
+                          <td>{c.niche_category ?? 'E-commerce business'}</td>
+                          <td className="text-muted">{SOURCE_LABEL[c.source_marketplace] ?? c.source_marketplace}</td>
+                          <td>{formatCurrency(c.listing_price)}</td>
+                          <td>{formatCurrency(c.annual_revenue)}</td>
+                          <td>{formatMultiple(c.multiple_achieved)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {compMin !== null && compMax !== null && (
+                  <p style={{ marginTop: 'var(--space-3)' }}>
+                    Comparable range: <strong>{formatMultiple(compMin)}–{formatMultiple(compMax)}</strong>. This listing is priced at{' '}
+                    <strong>{formatMultiple(listing.multiple_achieved)}</strong> —{' '}
+                    {listing.multiple_achieved >= compMin && listing.multiple_achieved <= compMax
+                      ? 'within range'
+                      : listing.multiple_achieved < compMin
+                        ? 'below the comparable range'
+                        : 'above the comparable range'}
+                    .
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-muted">No comparable sales found in this segment yet.</p>
+            )}
+          </div>
+
+          {listing.description && (
+            <div>
+              <h6 style={{ marginBottom: 'var(--space-2)' }}>Listing description</h6>
+              <p>{listing.description}</p>
+            </div>
           )}
-        </Section>
-      )}
+        </div>
 
-      {listing.risk_factors.length > 0 && (
-        <Section title="RISK FACTORS">
-          <ul className="list-inside list-disc space-y-1 text-sm text-gray-700">
-            {listing.risk_factors.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      {listing.improvement_potential.length > 0 && (
-        <Section title="UPSIDE POTENTIAL">
-          {listing.improvement_potential.map((op) => (
-            <p key={op.scenario} className="text-sm text-gray-700">
-              {op.scenario}: business could be worth ~<span className="font-semibold text-black">{formatCurrency(op.potential_value)}</span>
-            </p>
-          ))}
-        </Section>
-      )}
-
-      <Section title="LISTING SOURCE">
-        <p className="text-sm capitalize text-gray-700">{listing.source_marketplace.replace('_', ' ')}</p>
-        {listing.listed_date && <p className="text-xs text-gray-500">Listed {listing.listed_date}</p>}
-        {listing.description && <p className="mt-2 text-sm text-gray-700">{listing.description}</p>}
-      </Section>
-
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saved}
-        className="mt-8 w-full border border-brand py-3 text-sm font-semibold text-brand hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400"
-      >
-        {saved ? 'Saved to your account' : 'Save for later'}
-      </button>
-      {saveError && <p className="mt-2 text-sm text-red-600">{saveError}</p>}
+        <div className="detail-sidebar">
+          {homepage && (
+            <a href={homepage} target="_blank" rel="noreferrer" className="btn btn-primary btn-block">
+              View on {sourceLabel} →
+            </a>
+          )}
+          <button type="button" onClick={handleSave} disabled={saved} className="btn btn-secondary btn-block">
+            {saved ? 'Saved to dashboard' : 'Save to dashboard'}
+          </button>
+          {saveError && (
+            <p style={{ fontSize: 13, color: '#b3261e' }}>{saveError}</p>
+          )}
+          <p className="text-muted" style={{ fontSize: 13, marginTop: 'var(--space-3)' }}>
+            Data sourced from the original {sourceLabel} listing. FairValue Index does not broker deals or hold funds —
+            all transactions happen on the originating marketplace.
+          </p>
+        </div>
+      </div>
 
       {showAuth && <Auth onSuccess={handleAuthSuccess} onClose={() => setShowAuth(false)} />}
       {showToast && <Toast message="Deal saved" onDismiss={() => setShowToast(false)} />}

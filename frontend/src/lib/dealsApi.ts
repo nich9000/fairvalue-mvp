@@ -43,9 +43,19 @@ export interface PricingSegment {
   sample_size: number | null;
 }
 
+export interface ComparableListing {
+  id: string;
+  niche_category: string | null;
+  source_marketplace: string;
+  listing_price: number;
+  annual_revenue: number;
+  multiple_achieved: number;
+}
+
 export interface ListingDetail extends MarketplaceListing {
   deal_score: number | null;
   comparable_segment: PricingSegment | null;
+  comparable_listings: ComparableListing[];
   risk_factors: string[];
   improvement_potential: { scenario: string; potential_value: number }[];
   saved_by_user: boolean;
@@ -58,17 +68,40 @@ export interface SearchFilters {
   revenue_max?: number;
   fulfillment?: string;
   traffic?: string;
-  sort?: 'deal_score' | 'revenue' | 'listed_date';
+  marketplace?: string;
+  category?: string;
+  multiple_min?: number;
+  multiple_max?: number;
+  sort?: 'deal_score' | 'revenue' | 'listed_date' | 'price_desc' | 'multiple_asc' | 'multiple_desc';
   page?: number;
   limit?: number;
+}
+
+export interface MarketplaceCountEntry {
+  source_marketplace: string;
+  count: number;
+}
+
+export interface PlatformCountEntry {
+  platform: string;
+  count: number;
+}
+
+export interface CategoryCountEntry {
+  bucket: string;
+  count: number;
 }
 
 export interface SearchResponse {
   listings: MarketplaceListing[];
   total_count: number;
   page: number;
+  total_pages: number;
   has_next: boolean;
   source_breakdown: SourceBreakdownEntry[];
+  marketplace_counts: MarketplaceCountEntry[];
+  platform_counts: PlatformCountEntry[];
+  category_counts: CategoryCountEntry[];
 }
 
 export interface SavedDeal {
