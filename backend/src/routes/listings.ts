@@ -234,6 +234,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
   res.json({
     ...listing,
+    value_score: ranking?.value_score ?? null,
+    composite_score: ranking?.composite_score ?? null,
     deal_score: ranking?.composite_score ?? null,
     comparable_segment: segment ?? null,
     comparable_listings: comparableListings ?? [],
