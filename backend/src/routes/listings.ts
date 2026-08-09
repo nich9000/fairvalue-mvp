@@ -45,6 +45,11 @@ router.get('/', async (req, res) => {
   const { data: rawListings, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
 
+  const { count: soldCount } = await supabase
+    .from('marketplace_listings')
+    .select('id', { count: 'exact', head: true })
+    .eq('listing_status', 'sold');
+
   // categoryBucket() groups the free-text niche_category field into general buckets — there's
   // no DB column for it, so this filter is applied in JS after the Supabase query runs.
   let listings = rawListings ?? [];
@@ -55,10 +60,15 @@ router.get('/', async (req, res) => {
 
   // Marketplace/platform/category counts are shown as sidebar checkbox totals — computed over
   // all active listings regardless of the current filters, so counts stay stable as a user filters.
-  const { data: allActive } = await supabase.from('marketplace_listings').select('source_marketplace, platform, niche_category').eq('listing_status', 'active');
+  const { data: allActive } = await supabase
+    .from('marketplace_listings')
+    .select('source_marketplace, platform, niche_category, annual_revenue')
+    .eq('listing_status', 'active');
   const marketplaceCounts = new Map<string, number>();
   const platformCounts = new Map<string, number>();
   const categoryCounts = new Map<string, number>();
+  let revenueMin: number | null = null;
+  let revenueMax: number | null = null;
   for (const row of allActive ?? []) {
     marketplaceCounts.set(row.source_marketplace, (marketplaceCounts.get(row.source_marketplace) ?? 0) + 1);
     for (const displayPlatform of platformDisplayBuckets(row.platform)) {
@@ -66,6 +76,11 @@ router.get('/', async (req, res) => {
     }
     const bucket = categoryBucket(row.niche_category);
     categoryCounts.set(bucket, (categoryCounts.get(bucket) ?? 0) + 1);
+    const revenue = Number(row.annual_revenue);
+    if (!Number.isNaN(revenue)) {
+      revenueMin = revenueMin === null ? revenue : Math.min(revenueMin, revenue);
+      revenueMax = revenueMax === null ? revenue : Math.max(revenueMax, revenue);
+    }
   }
   // Sorted by count desc (name as tiebreaker) so checkbox order is deterministic across
   // requests — Supabase doesn't guarantee row order without an explicit .order(), and an
@@ -144,6 +159,8 @@ router.get('/', async (req, res) => {
     marketplace_counts,
     platform_counts,
     category_counts,
+    revenue_range: revenueMin !== null && revenueMax !== null ? { min: revenueMin, max: revenueMax } : null,
+    sold_count: soldCount ?? 0,
   });
 });
 

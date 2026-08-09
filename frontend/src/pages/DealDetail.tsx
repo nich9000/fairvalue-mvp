@@ -8,14 +8,10 @@ import { formatCurrency, formatMultiple } from '../lib/format';
 
 const SOURCE_LABEL: Record<string, string> = {
   empire_flippers: 'Empire Flippers',
-  flippa: 'Flippa',
-  proprietor: 'Proprietor',
 };
 
 const MARKETPLACE_HOMEPAGE: Record<string, string> = {
   empire_flippers: 'https://empireflippers.com',
-  flippa: 'https://flippa.com',
-  proprietor: 'https://www.proprietor.com',
 };
 
 function timeAgo(dateStr: string | null): string | null {

@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Nav from '../components/Nav';
 import { MarketplaceListing, searchListings } from '../lib/dealsApi';
-import { formatCurrency, formatMultiple } from '../lib/format';
+import { formatCompactCurrency, formatCurrency, formatMultiple } from '../lib/format';
 
 const SOURCE_LABEL: Record<string, string> = {
   empire_flippers: 'Empire Flippers',
-  flippa: 'Flippa',
-  proprietor: 'Proprietor',
 };
 
 const CARD_WIDTH = 320;
@@ -18,7 +16,8 @@ export default function DealsLanding() {
   const [query, setQuery] = useState('');
   const [carouselDeals, setCarouselDeals] = useState<MarketplaceListing[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
-  const [marketplaceCount, setMarketplaceCount] = useState<number | null>(null);
+  const [soldCount, setSoldCount] = useState<number | null>(null);
+  const [revenueRange, setRevenueRange] = useState<{ min: number; max: number } | null>(null);
   const [index, setIndex] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
@@ -28,7 +27,8 @@ export default function DealsLanding() {
     searchListings({ sort: 'deal_score', page: 1, limit: 8 }).then((res) => {
       setCarouselDeals(res.listings);
       setTotalCount(res.total_count);
-      setMarketplaceCount(res.marketplace_counts.filter((m) => m.count > 0).length);
+      setSoldCount(res.sold_count);
+      setRevenueRange(res.revenue_range);
     });
   }, []);
 
@@ -72,16 +72,14 @@ export default function DealsLanding() {
       >
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 13, color: 'var(--color-accent-700)', marginBottom: 'var(--space-3)' }}>
-            {totalCount !== null && marketplaceCount !== null
-              ? `${totalCount} active listings indexed across ${marketplaceCount} marketplaces`
-              : 'Loading live listings…'}
+            {totalCount !== null ? `${totalCount} active listings, live from Empire Flippers` : 'Loading live listings…'}
           </div>
           <h1 style={{ fontSize: 44, maxWidth: '16ch', marginBottom: 'var(--space-3)' }}>
             Every e-commerce business for sale, in one search.
           </h1>
           <p style={{ fontSize: 19, maxWidth: '38em', color: 'color-mix(in srgb, var(--color-text) 78%, transparent)', marginBottom: 'var(--space-2)' }}>
-            We index live listings from Empire Flippers, Flippa, and Proprietor so you can see what's actually for sale
-            and what similar businesses actually sold for — before you talk numbers with anyone.
+            We index live listings from Empire Flippers so you can see what's actually for sale and what similar
+            businesses actually sold for — before you talk numbers with anyone.
           </p>
         </div>
         <div className="img-placeholder" style={{ width: '100%', height: 360 }} />
@@ -122,7 +120,7 @@ export default function DealsLanding() {
           <span>Try:</span>
           <Link to="/deals/results?platform=Amazon+FBA&revenue_max=1000000">Amazon FBA under $1M</Link>
           <Link to="/deals/results?platform=Shopify&multiple_min=3&multiple_max=5">Shopify, 3–5x multiple</Link>
-          <Link to="/deals/results?marketplace=flippa">Content sites on Flippa</Link>
+          <Link to="/deals/results?revenue_max=250000">Under $250K revenue</Link>
         </div>
       </section>
 
@@ -147,9 +145,9 @@ export default function DealsLanding() {
             <path d="M9 21V12h6v9"></path>
           </svg>
           <div>
-            <div style={{ fontSize: 32, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{marketplaceCount ?? '—'}</div>
+            <div style={{ fontSize: 32, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{soldCount ?? '—'}</div>
             <div className="text-muted" style={{ fontSize: 13 }}>
-              marketplaces indexed
+              real sold comps analyzed
             </div>
           </div>
         </div>
@@ -159,7 +157,9 @@ export default function DealsLanding() {
             <path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
           </svg>
           <div>
-            <div style={{ fontSize: 32, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>$500K–$5M</div>
+            <div style={{ fontSize: 32, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>
+              {revenueRange ? `${formatCompactCurrency(revenueRange.min)}–${formatCompactCurrency(revenueRange.max)}` : '—'}
+            </div>
             <div className="text-muted" style={{ fontSize: 13 }}>
               revenue range covered
             </div>
@@ -233,7 +233,7 @@ export default function DealsLanding() {
             </svg>
             <h4 style={{ marginBottom: 'var(--space-1)' }}>We pull listings directly</h4>
             <p className="text-muted" style={{ fontSize: 14 }}>
-              Every listing on Empire Flippers, Flippa, and Proprietor. No manual entry, no editorializing.
+              Every listing on Empire Flippers, active and sold. No manual entry, no editorializing.
             </p>
           </div>
           <div>
@@ -241,9 +241,9 @@ export default function DealsLanding() {
               <circle cx="11" cy="11" r="7"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <h4 style={{ marginBottom: 'var(--space-1)' }}>You search across all three</h4>
+            <h4 style={{ marginBottom: 'var(--space-1)' }}>You filter by what matters</h4>
             <p className="text-muted" style={{ fontSize: 14 }}>
-              Filter by niche, fulfillment model, revenue, or multiple — one query instead of three browser tabs.
+              Niche, fulfillment model, revenue, or multiple — narrow it down instead of scrolling one long list.
             </p>
           </div>
           <div>
@@ -263,7 +263,7 @@ export default function DealsLanding() {
         <h2 style={{ maxWidth: '28ch', marginBottom: 'var(--space-2)' }}>We are not a valuation tool. We are not a broker.</h2>
         <p style={{ maxWidth: '44em', color: 'color-mix(in srgb, var(--color-text) 78%, transparent)', marginBottom: 'var(--space-4)' }}>
           FairValue Index doesn't estimate what your business is worth. It shows you what businesses like yours have
-          actually sold for, across every major marketplace, so you can judge fair value yourself.
+          actually sold for, so you can judge fair value yourself.
         </p>
         <Link to="/deals/results" className="btn btn-primary">
           See what's for sale
@@ -274,7 +274,7 @@ export default function DealsLanding() {
         className="text-muted"
         style={{ maxWidth: 1120, margin: '0 auto', padding: 'var(--space-6) var(--space-4) var(--space-8)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-2)', fontSize: 13 }}
       >
-        <span>© 2026 FairValue Index. Not affiliated with Empire Flippers, Flippa, or Proprietor.</span>
+        <span>© 2026 FairValue Index. Not affiliated with Empire Flippers.</span>
         <span style={{ display: 'flex', gap: 'var(--space-4)' }}>
           <a href="#">Sources &amp; methodology</a>
           <a href="#">Contact</a>

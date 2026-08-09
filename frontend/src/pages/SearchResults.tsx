@@ -24,8 +24,6 @@ function FilterSection({ title, children, defaultOpen = true }: { title: string;
 
 const SOURCE_LABEL: Record<string, string> = {
   empire_flippers: 'Empire Flippers',
-  flippa: 'Flippa',
-  proprietor: 'Proprietor',
 };
 
 const SORT_OPTIONS: { value: NonNullable<SearchFilters['sort']>; label: string }[] = [

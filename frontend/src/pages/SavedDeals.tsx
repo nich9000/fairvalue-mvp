@@ -8,8 +8,6 @@ import { formatCurrency, formatMultiple } from '../lib/format';
 
 const SOURCE_LABEL: Record<string, string> = {
   empire_flippers: 'Empire Flippers',
-  flippa: 'Flippa',
-  proprietor: 'Proprietor',
 };
 
 function criteriaSummary(n: TrackedNiche): string {

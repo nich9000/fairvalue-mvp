@@ -102,6 +102,8 @@ export interface SearchResponse {
   marketplace_counts: MarketplaceCountEntry[];
   platform_counts: PlatformCountEntry[];
   category_counts: CategoryCountEntry[];
+  revenue_range: { min: number; max: number } | null;
+  sold_count: number;
 }
 
 export interface SavedDeal {
