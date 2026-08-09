@@ -141,12 +141,20 @@ async function run() {
   const raw = await fetchAllListings();
   console.log(`Fetched ${raw.length} total listings across all categories.`);
 
+  // Include Sold listings, not just current For Sale ones — real closed prices are exactly
+  // what comparable-sales analysis is built on, and it's the same sanctioned public endpoint.
+  // Sold rows never surface in the main browse/search (that already filters to listing_status
+  // = 'active'); they only feed the comparable-sales table and pricing-index medians, both of
+  // which already query across all statuses with no other code changes needed.
+  const RELEVANT_STATUSES = new Set(['For Sale', 'Pending Sold', 'Sold']);
   const relevant = raw.filter((l) => {
-    if (l.listing_status !== 'For Sale') return false;
+    if (!RELEVANT_STATUSES.has(l.listing_status)) return false;
     const monetizations = l.monetizations.map((m) => m.monetization);
     return monetizations.some((m) => ECOMMERCE_MONETIZATIONS.has(m));
   });
-  console.log(`${relevant.length} are active e-commerce-relevant listings (eCommerce/Amazon FBA/FBM/DropShipping/Subscription-Box).`);
+  const forSaleCount = relevant.filter((l) => l.listing_status !== 'Sold').length;
+  const soldCount = relevant.filter((l) => l.listing_status === 'Sold').length;
+  console.log(`${relevant.length} e-commerce-relevant listings (eCommerce/Amazon FBA/FBM/DropShipping/Subscription-Box): ${forSaleCount} for sale, ${soldCount} sold.`);
 
   const mapped = relevant
     .filter((l) => l.listing_price > 0 && l.average_monthly_gross_revenue && l.average_monthly_net_profit != null)
@@ -173,8 +181,10 @@ async function run() {
         traffic_channel: inferTrafficChannel(l),
         data_completeness_score: computeDataCompleteness(l),
         listed_date: l.first_listed_at ? l.first_listed_at.slice(0, 10) : null,
+        // EF's public API doesn't expose an exact sold-date field — leaving this null rather
+        // than approximating from updated_at, which isn't reliably the actual sale date.
         sold_date: null,
-        listing_status: 'active',
+        listing_status: l.listing_status === 'Sold' ? 'sold' : 'active',
         description: l.summary,
       };
     });
@@ -194,12 +204,25 @@ async function run() {
 
   // Recompute pricing index + rankings from the full current dataset (real EF rows plus
   // whatever Flippa/Proprietor sample rows remain), same methodology as seedListings.ts.
+  // Paginated with .range() — PostgREST caps a single select() at 1000 rows by default, which
+  // would silently drop ~10% of listings from the scoring pass with 1000+ total rows.
   console.log('Recomputing pricing index and rankings for the full dataset...');
-  const { data: allListings, error: fetchError } = await supabase.from('marketplace_listings').select('*');
-  if (fetchError || !allListings) {
-    console.error('Failed to reload listings for scoring:', fetchError?.message);
-    process.exit(1);
+  const allListings: any[] = [];
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data: batch, error: fetchError } = await supabase
+      .from('marketplace_listings')
+      .select('*')
+      .range(from, from + PAGE - 1);
+    if (fetchError) {
+      console.error('Failed to reload listings for scoring:', fetchError.message);
+      process.exit(1);
+    }
+    if (!batch || batch.length === 0) break;
+    allListings.push(...batch);
+    if (batch.length < PAGE) break;
   }
+  console.log(`Reloaded ${allListings.length} total listings for scoring.`);
 
   await supabase.from('deal_rankings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   await supabase.from('marketplace_pricing_index').delete().neq('id', '00000000-0000-0000-0000-000000000000');
