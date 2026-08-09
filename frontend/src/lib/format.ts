@@ -16,3 +16,12 @@ export function formatCompactCurrency(value: number): string {
   if (value >= 1_000) return `$${Math.round(value / 1000)}K`;
   return `$${Math.round(value)}`;
 }
+
+// value_score is % difference from the segment's median multiple (positive = priced below
+// median = better value for a buyer). +/-5% is treated as noise rather than a real signal.
+export function valueScoreLabel(score: number | null): { text: string; tone: 'good' | 'bad' | 'neutral' } | null {
+  if (score === null) return null;
+  if (score > 5) return { text: `${Math.round(score)}% below market multiple`, tone: 'good' };
+  if (score < -5) return { text: `${Math.round(Math.abs(score))}% above market multiple`, tone: 'bad' };
+  return { text: 'At market multiple', tone: 'neutral' };
+}

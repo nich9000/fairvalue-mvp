@@ -4,7 +4,7 @@ import Auth from '../components/Auth';
 import Nav from '../components/Nav';
 import Toast from '../components/Toast';
 import { CategoryCountEntry, MarketplaceCountEntry, MarketplaceListing, PlatformCountEntry, SearchFilters, createTrackedNiche, getSavedDeals, saveDeal, searchListings, unsaveDeal } from '../lib/dealsApi';
-import { formatCurrency, formatMultiple } from '../lib/format';
+import { formatCurrency, formatMultiple, valueScoreLabel } from '../lib/format';
 import { CategoryIcon, CategoryIconByBucket, PlatformIcon } from '../lib/icons';
 
 function FilterSection({ title, children, defaultOpen = true }: { title: string; children: ReactNode; defaultOpen?: boolean }) {
@@ -431,6 +431,7 @@ export default function SearchResults() {
             {listings.map((listing) => {
               const ago = timeAgo(listing.listed_date);
               const isSaved = savedIds.has(listing.id);
+              const valueLabel = valueScoreLabel(listing.value_score);
               return (
                 <div key={listing.id} className="card elev-md result-row" style={{ position: 'relative' }}>
                   <div className="img-placeholder" style={{ width: 96, height: 72, flexShrink: 0 }} />
@@ -469,6 +470,17 @@ export default function SearchResults() {
                       <div className="card-meta">Multiple</div>
                       <span className="tag tag-accent">{formatMultiple(listing.multiple_achieved)}</span>
                     </div>
+                    {valueLabel && (
+                      <div>
+                        <div className="card-meta">Value</div>
+                        <span
+                          className="tag tag-outline"
+                          style={valueLabel.tone === 'bad' ? { color: '#b3261e', borderColor: '#b3261e' } : undefined}
+                        >
+                          {valueLabel.text}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"

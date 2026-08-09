@@ -180,15 +180,37 @@ router.get('/:id', optionalAuth, async (req, res) => {
     .eq('traffic_channel', listing.traffic_channel)
     .maybeSingle();
 
-  const { data: comparableListings } = await supabase
+  // Same-platform pool, ranked by relevance rather than an exact segment match — an exact
+  // platform+fulfillment+traffic match too often pulled comps from an unrelated niche (e.g. a
+  // kitchenware listing paired with supplements/sports just because both are Amazon FBA/paid-ads).
+  // Category match is weighted highest since "similar business" is what a buyer actually means
+  // by "comparable," with fulfillment/traffic as tie-breakers since they still affect economics.
+  const { data: platformPool } = await supabase
     .from('marketplace_listings')
-    .select('id, niche_category, source_marketplace, listing_price, annual_revenue, multiple_achieved')
+    .select('id, niche_category, source_marketplace, listing_price, annual_revenue, multiple_achieved, fulfillment_model, traffic_channel, data_completeness_score')
     .eq('platform', listing.platform)
-    .eq('fulfillment_model', listing.fulfillment_model)
-    .eq('traffic_channel', listing.traffic_channel)
     .neq('id', id)
-    .order('data_completeness_score', { ascending: false })
-    .limit(3);
+    .order('data_completeness_score', { ascending: false });
+
+  const targetCategory = categoryBucket(listing.niche_category);
+  const comparableListings = (platformPool ?? [])
+    .map((l) => {
+      let relevance = 0;
+      if (categoryBucket(l.niche_category) === targetCategory) relevance += 4;
+      if (l.fulfillment_model === listing.fulfillment_model) relevance += 2;
+      if (l.traffic_channel === listing.traffic_channel) relevance += 1;
+      return { listing: l, relevance };
+    })
+    .sort((a, b) => b.relevance - a.relevance)
+    .slice(0, 3)
+    .map(({ listing: l }) => ({
+      id: l.id,
+      niche_category: l.niche_category,
+      source_marketplace: l.source_marketplace,
+      listing_price: l.listing_price,
+      annual_revenue: l.annual_revenue,
+      multiple_achieved: l.multiple_achieved,
+    }));
 
   let saved_by_user = false;
   if (req.user) {
