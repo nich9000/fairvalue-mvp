@@ -121,3 +121,23 @@ create index if not exists idx_user_tracked_niches_user on user_tracked_niches(u
 -- existing databases before the next `npm run fetch:ef`.
 alter table marketplace_listings add column if not exists business_model varchar;
 create index if not exists idx_marketplace_listings_business_model on marketplace_listings(business_model);
+
+-- Weekly history of every Empire Flippers listing, appended by fetchEmpireFlippers.ts on each
+-- refresh. Used to track price cuts, time on market, and listings withdrawn without selling.
+-- Run once on existing databases.
+create table if not exists listing_snapshots (
+  snapshot_date date not null,
+  source_marketplace varchar not null,
+  external_id varchar not null,
+  listing_status varchar not null,
+  listing_price decimal,
+  annual_revenue decimal,
+  annual_profit decimal,
+  hours_per_week decimal,
+  days_on_marketplace integer,
+  first_listed_at timestamp,
+  primary key (snapshot_date, external_id)
+);
+create index if not exists idx_listing_snapshots_external_id on listing_snapshots(external_id);
+-- Only the backend (service-role key, which bypasses RLS) touches this table; no policies needed.
+alter table listing_snapshots enable row level security;
