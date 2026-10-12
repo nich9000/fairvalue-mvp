@@ -1,12 +1,14 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Auth from '../components/Auth';
+import ListingImage from '../components/ListingImage';
 import Nav from '../components/Nav';
 import Toast from '../components/Toast';
 import { CategoryCountEntry, MarketplaceCountEntry,
   BusinessModelCountEntry, MarketplaceListing, PlatformCountEntry, SearchFilters, createTrackedNiche, getSavedDeals, saveDeal, searchListings, unsaveDeal } from '../lib/dealsApi';
 import { formatCurrency, formatMultiple, valueScoreLabel } from '../lib/format';
 import { CategoryIcon, CategoryIconByBucket, PlatformIcon } from '../lib/icons';
+import { assignListingPhotos } from '../lib/listingImages';
 
 function FilterSection({ title, children, defaultOpen = true }: { title: string; children: ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -372,6 +374,8 @@ export default function SearchResults() {
     );
   }
 
+  const photos = assignListingPhotos(listings);
+
   return (
     <div className="bs" style={{ minHeight: '100vh' }}>
       <Nav current="search" maxWidth={1280} />
@@ -465,7 +469,7 @@ export default function SearchResults() {
               const valueLabel = valueScoreLabel(listing.value_score);
               return (
                 <div key={listing.id} className="card elev-md result-row" style={{ position: 'relative' }}>
-                  <div className="img-placeholder" style={{ width: 96, height: 72, flexShrink: 0 }} />
+                  <ListingImage photoId={photos.get(listing.id)!} alt="" width={96} height={72} srcWidth={240} />
                   <div style={{ flex: 1, minWidth: 220 }}>
                     <div className="card-kicker" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <PlatformIcon platform={listing.platform} />

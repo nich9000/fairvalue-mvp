@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Auth from '../components/Auth';
+import ListingImage from '../components/ListingImage';
 import Nav from '../components/Nav';
 import Toast from '../components/Toast';
 import { getListingDetail, ListingDetail, saveDeal } from '../lib/dealsApi';
 import { formatCurrency, formatMultiple, valueScoreLabel } from '../lib/format';
+import { listingPhoto } from '../lib/listingImages';
 
 const SOURCE_LABEL: Record<string, string> = {
   empire_flippers: 'Empire Flippers',
@@ -142,7 +144,15 @@ export default function DealDetail() {
           <div className="text-muted" style={{ fontSize: 14, marginBottom: 'var(--space-4)' }}>
             {ago ? `Listed ${ago} on ${sourceLabel}` : `Listed on ${sourceLabel}`}
           </div>
-          <div className="img-placeholder" style={{ width: '100%', height: 280, marginBottom: 'var(--space-6)' }} />
+          <ListingImage
+            photoId={listingPhoto(listing)}
+            alt=""
+            width="100%"
+            height={280}
+            srcWidth={1100}
+            eager
+            style={{ marginBottom: 'var(--space-6)' }}
+          />
 
           <div style={{ marginBottom: 'var(--space-6)' }}>
             <h6 style={{ marginBottom: 'var(--space-3)' }}>Key metrics</h6>
