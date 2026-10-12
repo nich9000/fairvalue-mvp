@@ -55,6 +55,9 @@ export interface ValuationResult {
   final_valuation_high: number;
   confidence_score: number;
   comparable_count: number;
+  // 'profit': annual_profit x comps' price/profit multiple. 'revenue_fallback': store isn't
+  // profitable, so it's valued on discounted revenue and confidence is capped.
+  valuation_basis: 'profit' | 'revenue_fallback';
   improvement_opportunities: ImprovementOpportunity[];
 }
 

@@ -25,12 +25,12 @@ fairvalue-mvp/
 1. Open the [Supabase SQL editor](https://supabase.com/dashboard/project/utildmwkhpmfbuasqhkt/sql/new) for the project.
 2. Run [`backend/src/db/schema.sql`](backend/src/db/schema.sql) to create all tables.
 3. Copy `backend/.env.example` to `backend/.env` and fill in `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and a random `JWT_SECRET`.
-4. Seed the 100 comps rows:
+4. Load real listings (feeds both deal search and seller valuations):
 
 ```bash
 cd backend
 npm install
-npm run seed
+npm run fetch:ef
 ```
 
 ### 2. Backend
@@ -67,10 +67,10 @@ npm run dev
 
 See [`backend/src/services/valuation.ts`](backend/src/services/valuation.ts). Summary:
 
-1. Find comps matching platform + niche + revenue within ±20%.
-2. Base multiple = median of matched comps' `multiple_achieved` (default `2.5x` if fewer than 5 comps match).
+1. Find comps in `marketplace_listings` (real Empire Flippers listings, For Sale + Sold) on the same platform with revenue within 0.5x–2x, keeping the 50 closest in size. Falls back to all platforms if fewer than 5 match.
+2. Base multiple = median of those comps' `multiple_achieved` (price / annual profit; default `2.5x` if fewer than 5 comps).
 3. Adjust the multiple for retention, growth, margin, and recurring revenue; cap between `1.5x` and `6.0x`.
-4. `valuation = annual_revenue * adjusted_multiple`, ±10% range.
+4. `valuation = annual_profit * adjusted_multiple`, ±10% range. Unprofitable stores fall back to the comps' median price/revenue × 0.6 (`valuation_basis: "revenue_fallback"`, confidence capped at 60).
 5. Confidence score scales with the number of matched comps.
 6. Improvement opportunities are computed per metric and sorted by value gain.
 
