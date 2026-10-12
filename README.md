@@ -85,7 +85,7 @@ Each run also appends every listing's status, price and financials to `listing_s
 ## Deployment
 
 - **Frontend → Vercel**: connect the GitHub repo, root directory `frontend`, set `VITE_API_URL` to the Railway backend's public URL.
-- **Backend → Railway**: connect the GitHub repo, root directory `backend`, set the env vars from `backend/.env.example` (`FRONTEND_URL` must match the Vercel URL for CORS). Deploys via `backend/Dockerfile` (Node 22 — `@supabase/supabase-js`'s realtime client needs native WebSocket support, unavailable on Node 20). Railway injects its own `PORT` — when generating the public domain, set the target port to match whatever the deploy logs show ("FairValue API listening on port …"), not the app's local default.
+- **Backend → Railway**: connect the GitHub repo, root directory `backend`, set the env vars from `backend/.env.example` (`FRONTEND_URL` must match the Vercel URL for CORS; it takes a comma-separated list, and `*` matches part of a hostname, e.g. `https://fairvalue-mvp.vercel.app,https://fairvalue-mvp-*-fair-value1.vercel.app` to also allow preview deployments). Deploys via `backend/Dockerfile` (Node 22 — `@supabase/supabase-js`'s realtime client needs native WebSocket support, unavailable on Node 20). Railway injects its own `PORT` — when generating the public domain, set the target port to match whatever the deploy logs show ("FairValue API listening on port …"), not the app's local default.
 - **Database → Supabase**: project `utildmwkhpmfbuasqhkt` (already provisioned). Run `schema.sql`, then `npm run seed`.
 
 ## What's stubbed for MVP

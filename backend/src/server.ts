@@ -18,7 +18,21 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-app.use(cors({ origin: FRONTEND_URL }));
+// FRONTEND_URL is a comma-separated list of allowed origins. A `*` matches one
+// hostname label fragment, so Vercel preview URLs can be allowed with e.g.
+// https://fairvalue-mvp-*-fair-value1.vercel.app
+const allowedOrigins = FRONTEND_URL.split(',')
+  .map((o) => o.trim().replace(/\/$/, ''))
+  .filter(Boolean)
+  .map((o) => new RegExp('^' + o.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[a-z0-9-]+') + '$'));
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      callback(null, !origin || allowedOrigins.some((re) => re.test(origin)));
+    },
+  })
+);
 app.use(express.json());
 
 app.use('/api/health', healthRouter);
