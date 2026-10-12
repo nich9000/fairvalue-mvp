@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import ListingImage from '../components/ListingImage';
 import Nav from '../components/Nav';
 import { MarketplaceListing, searchListings } from '../lib/dealsApi';
 import { formatCompactCurrency, formatCurrency, formatMultiple } from '../lib/format';
+import { assignListingPhotos } from '../lib/listingImages';
 
 const SOURCE_LABEL: Record<string, string> = {
   empire_flippers: 'Empire Flippers',
@@ -10,6 +12,7 @@ const SOURCE_LABEL: Record<string, string> = {
 
 const CARD_WIDTH = 320;
 const CARD_GAP = 20;
+const HERO_PHOTO = '1551288049-bebda4e38f71';
 
 export default function DealsLanding() {
   const navigate = useNavigate();
@@ -52,6 +55,7 @@ export default function DealsLanding() {
   const maxOffset = Math.max(0, stripWidth - viewportWidth);
   const rawOffset = index * (CARD_WIDTH + CARD_GAP);
   const offset = Math.min(rawOffset, maxOffset);
+  const photos = assignListingPhotos(carouselDeals);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -82,7 +86,7 @@ export default function DealsLanding() {
             businesses actually sold for — before you talk numbers with anyone.
           </p>
         </div>
-        <div className="img-placeholder" style={{ width: '100%', height: 360 }} />
+        <ListingImage photoId={HERO_PHOTO} alt="Business analytics on a laptop" width="100%" height={360} srcWidth={900} eager />
       </section>
 
       <section style={{ maxWidth: 1120, margin: '0 auto', padding: '0 var(--space-4) var(--space-6)' }}>
@@ -201,7 +205,7 @@ export default function DealsLanding() {
                   className="card elev-md"
                   style={{ flex: `0 0 ${CARD_WIDTH}px`, textDecoration: 'none', color: 'inherit' }}
                 >
-                  <div className="img-placeholder" style={{ width: '100%', height: 140 }} />
+                  <ListingImage photoId={photos.get(deal.id)!} alt="" width="100%" height={140} />
                   <div className="card-kicker">
                     {SOURCE_LABEL[deal.source_marketplace] ?? deal.source_marketplace} · {deal.platform}
                   </div>
