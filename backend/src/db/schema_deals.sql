@@ -139,3 +139,5 @@ create table if not exists listing_snapshots (
   primary key (snapshot_date, external_id)
 );
 create index if not exists idx_listing_snapshots_external_id on listing_snapshots(external_id);
+-- Only the backend (service-role key, which bypasses RLS) touches this table; no policies needed.
+alter table listing_snapshots enable row level security;
