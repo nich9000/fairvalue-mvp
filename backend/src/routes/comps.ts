@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { supabase } from '../db/supabase';
-import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -20,22 +19,6 @@ router.get('/', async (req, res) => {
   }
 
   res.json({ comps: data ?? [] });
-});
-
-// Auth-gated for MVP; there is no dedicated admin role yet, so any authenticated
-// user can reseed. Intended for internal/admin use only.
-router.post('/seed', requireAuth, async (req, res) => {
-  const { comps_data } = req.body ?? {};
-  if (!Array.isArray(comps_data) || comps_data.length === 0) {
-    return res.status(400).json({ error: 'comps_data must be a non-empty array' });
-  }
-
-  const { data, error } = await supabase.from('comps').insert(comps_data).select('id');
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.status(201).json({ inserted_count: data?.length ?? 0 });
 });
 
 export default router;
