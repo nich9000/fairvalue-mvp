@@ -115,3 +115,9 @@ create table if not exists user_tracked_niches (
 );
 
 create index if not exists idx_user_tracked_niches_user on user_tracked_niches(user_id);
+
+-- Business model (ecommerce / saas / app / content / digital_product / service / other),
+-- derived from Empire Flippers' monetizations by fetchEmpireFlippers.ts. Run once on
+-- existing databases before the next `npm run fetch:ef`.
+alter table marketplace_listings add column if not exists business_model varchar;
+create index if not exists idx_marketplace_listings_business_model on marketplace_listings(business_model);

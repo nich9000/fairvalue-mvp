@@ -13,6 +13,7 @@ export interface MarketplaceListing {
   growth_rate_yoy_pct: number | null;
   platform: string;
   niche_category: string | null;
+  business_model: string | null;
   fulfillment_model: string | null;
   traffic_channel: string | null;
   data_completeness_score: number | null;
@@ -69,6 +70,7 @@ export interface SearchFilters {
   fulfillment?: string;
   traffic?: string;
   marketplace?: string;
+  business_model?: string;
   category?: string;
   multiple_min?: number;
   multiple_max?: number;
@@ -79,6 +81,11 @@ export interface SearchFilters {
 
 export interface MarketplaceCountEntry {
   source_marketplace: string;
+  count: number;
+}
+
+export interface BusinessModelCountEntry {
+  business_model: string;
   count: number;
 }
 
@@ -100,6 +107,7 @@ export interface SearchResponse {
   has_next: boolean;
   source_breakdown: SourceBreakdownEntry[];
   marketplace_counts: MarketplaceCountEntry[];
+  business_model_counts: BusinessModelCountEntry[];
   platform_counts: PlatformCountEntry[];
   category_counts: CategoryCountEntry[];
   revenue_range: { min: number; max: number } | null;

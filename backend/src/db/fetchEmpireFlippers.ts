@@ -14,9 +14,21 @@ const API_BASE = 'https://api.empireflippers.com/api/v1/listings/list';
 const PAGE_SIZE = 100;
 const RATE_LIMIT_MS = 1100; // stay under EF's documented 1 req/sec
 
-// Empire Flippers' "physical_product_monetizations" grouping — the subset of their broader
-// catalog (which also includes SaaS, content, agencies, etc.) that matches this app's scope.
+// Monetization groupings from EF's /api/v1/ef-config. A listing can carry several; the first
+// matching group in BUSINESS_MODEL_PRIORITY wins (a SaaS with an affiliate side-income is SaaS).
 const ECOMMERCE_MONETIZATIONS = new Set(['eCommerce', 'Amazon FBA', 'Amazon FBM', 'DropShipping', 'Subscription-Box']);
+const CONTENT_MONETIZATIONS = new Set(['Affiliate', 'Amazon Associates', 'Display Advertising', 'Newsletter', 'YouTube']);
+const DIGITAL_PRODUCT_MONETIZATIONS = new Set(['Digital Product', 'Info Product', 'Subscription', 'Amazon KDP', 'Amazon Merch']);
+const SERVICE_MONETIZATIONS = new Set(['Agency', 'Service', 'Lead Gen']);
+
+const BUSINESS_MODEL_PRIORITY: [string, (m: string) => boolean][] = [
+  ['saas', (m) => m === 'SaaS'],
+  ['app', (m) => m === 'Application'],
+  ['ecommerce', (m) => ECOMMERCE_MONETIZATIONS.has(m)],
+  ['content', (m) => CONTENT_MONETIZATIONS.has(m)],
+  ['digital_product', (m) => DIGITAL_PRODUCT_MONETIZATIONS.has(m)],
+  ['service', (m) => SERVICE_MONETIZATIONS.has(m)],
+];
 
 const TRAFFIC_CHANNEL_MAP: Record<string, string> = {
   'Organic Search': 'organic',
@@ -103,7 +115,18 @@ function inferPlatform(monetizations: string[], sites: EFSite[]): string {
   return sitePlatform;
 }
 
-function inferFulfillmentModel(monetizations: string[]): string {
+function inferBusinessModel(monetizations: string[]): string {
+  for (const [model, matches] of BUSINESS_MODEL_PRIORITY) {
+    if (monetizations.some(matches)) return model;
+  }
+  return 'other';
+}
+
+// Non-e-commerce businesses have no fulfillment; using the business model in its place keeps
+// SaaS, content, etc. in their own pricing segments (segments key on platform/fulfillment/
+// traffic) instead of being benchmarked against physical-product stores.
+function inferFulfillmentModel(monetizations: string[], businessModel: string): string {
+  if (businessModel !== 'ecommerce') return businessModel;
   if (monetizations.includes('Amazon FBA')) return 'FBA';
   if (monetizations.includes('DropShipping')) return 'dropshipping';
   if (monetizations.includes('Subscription-Box')) return 'subscription_box';
@@ -148,18 +171,17 @@ async function run() {
   // which already query across all statuses with no other code changes needed.
   const RELEVANT_STATUSES = new Set(['For Sale', 'Pending Sold', 'Sold']);
   const relevant = raw.filter((l) => {
-    if (!RELEVANT_STATUSES.has(l.listing_status)) return false;
-    const monetizations = l.monetizations.map((m) => m.monetization);
-    return monetizations.some((m) => ECOMMERCE_MONETIZATIONS.has(m));
+    return RELEVANT_STATUSES.has(l.listing_status);
   });
   const forSaleCount = relevant.filter((l) => l.listing_status !== 'Sold').length;
   const soldCount = relevant.filter((l) => l.listing_status === 'Sold').length;
-  console.log(`${relevant.length} e-commerce-relevant listings (eCommerce/Amazon FBA/FBM/DropShipping/Subscription-Box): ${forSaleCount} for sale, ${soldCount} sold.`);
+  console.log(`${relevant.length} listings across all business models: ${forSaleCount} for sale, ${soldCount} sold.`);
 
   const mapped = relevant
     .filter((l) => l.listing_price > 0 && l.average_monthly_gross_revenue && l.average_monthly_net_profit != null)
     .map((l) => {
       const monetizations = l.monetizations.map((m) => m.monetization);
+      const businessModel = inferBusinessModel(monetizations);
       const annualRevenue = l.average_monthly_gross_revenue! * 12;
       const annualProfit = l.average_monthly_net_profit! * 12;
       return {
@@ -177,7 +199,8 @@ async function run() {
         growth_rate_yoy_pct: l.gross_revenue_trend_percent,
         platform: inferPlatform(monetizations, l.sites),
         niche_category: (l.niches[0]?.niche ?? 'general').toLowerCase(),
-        fulfillment_model: inferFulfillmentModel(monetizations),
+        business_model: businessModel,
+        fulfillment_model: inferFulfillmentModel(monetizations, businessModel),
         traffic_channel: inferTrafficChannel(l),
         data_completeness_score: computeDataCompleteness(l),
         listed_date: l.first_listed_at ? l.first_listed_at.slice(0, 10) : null,

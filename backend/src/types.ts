@@ -76,6 +76,7 @@ export interface MarketplaceListing {
   growth_rate_yoy_pct: number | null;
   platform: string;
   niche_category: string | null;
+  business_model: string | null;
   fulfillment_model: string | null;
   traffic_channel: string | null;
   customer_retention_pct: number | null;
