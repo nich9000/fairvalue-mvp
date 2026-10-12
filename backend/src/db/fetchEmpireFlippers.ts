@@ -69,10 +69,43 @@ interface EFListing {
   profit_margin: number | null;
   gross_revenue_trend_percent: number | null;
   first_listed_at: string | null;
+  hours_worked_per_week?: number | null;
+  days_on_marketplace?: number | null;
   monetizations: { monetization: string }[];
   niches: { niche: string }[];
   sites: EFSite[];
   combined_site_metrics?: EFTrafficMonth[];
+}
+
+// marketplace_listings is replaced on every run, so this append-only weekly copy is the only
+// record of price cuts, time on market, and listings that disappear without selling (EF's API
+// only returns For Sale, Pending Sold and Sold, so a withdrawn listing just disappears). One row per listing per day; re-running
+// on the same day overwrites that day's rows. A failure here is logged but doesn't stop the refresh.
+async function saveSnapshot(raw: EFListing[]) {
+  const snapshotDate = new Date().toISOString().slice(0, 10);
+  const rows = raw.map((l) => ({
+    snapshot_date: snapshotDate,
+    source_marketplace: 'empire_flippers',
+    external_id: `empire_flippers_${l.listing_number}`,
+    listing_status: l.listing_status,
+    listing_price: l.listing_price,
+    annual_revenue: l.average_monthly_gross_revenue != null ? l.average_monthly_gross_revenue * 12 : null,
+    annual_profit: l.average_monthly_net_profit != null ? l.average_monthly_net_profit * 12 : null,
+    hours_per_week: l.hours_worked_per_week ?? null,
+    days_on_marketplace: l.days_on_marketplace ?? null,
+    first_listed_at: l.first_listed_at,
+  }));
+  const CHUNK = 500;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const { error } = await supabase
+      .from('listing_snapshots')
+      .upsert(rows.slice(i, i + CHUNK), { onConflict: 'snapshot_date,external_id' });
+    if (error) {
+      console.error('Failed to save listing snapshot (continuing with refresh):', error.message);
+      return;
+    }
+  }
+  console.log(`Saved snapshot of ${rows.length} listings for ${snapshotDate}.`);
 }
 
 async function sleep(ms: number) {
@@ -162,6 +195,7 @@ function segmentKey(platform: string, fulfillment: string, traffic: string): str
 async function run() {
   console.log('Fetching live listings from Empire Flippers...');
   const raw = await fetchAllListings();
+  await saveSnapshot(raw);
   console.log(`Fetched ${raw.length} total listings across all categories.`);
 
   // Include Sold listings, not just current For Sale ones — real closed prices are exactly

@@ -80,6 +80,8 @@ See [`backend/src/services/valuation.ts`](backend/src/services/valuation.ts). Su
 
 `.github/workflows/refresh-listings.yml` runs it every Monday and on demand (Actions → Refresh marketplace listings → Run workflow). Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as repository secrets first. Before the first run on an existing database, run the `business_model` migration at the bottom of `backend/src/db/schema_deals.sql`.
 
+Each run also appends every listing's status, price and financials to `listing_snapshots` (create it with the `listing_snapshots` block in `schema_deals.sql`). `marketplace_listings` only holds the latest state, so the snapshots are the history: price cuts, days on market, and listings that vanish from the API without selling (the API only returns For Sale, Pending Sold and Sold listings, so a withdrawn one just disappears).
+
 ## Deployment
 
 - **Frontend → Vercel**: connect the GitHub repo, root directory `frontend`, set `VITE_API_URL` to the Railway backend's public URL.
