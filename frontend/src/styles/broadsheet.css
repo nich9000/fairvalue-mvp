@@ -218,6 +218,7 @@
 .bs .detail-sidebar { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .bs .img-placeholder { background: var(--color-neutral-200); border-radius: var(--radius-md); }
 .bs .hero-grid { display: grid; grid-template-columns: minmax(0,1.7fr) minmax(0,1fr); gap: var(--space-8); align-items: center; }
+.bs .hero-collage { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 /* — mobile filter bottom sheet — */
 .bs .mobile-filter-bar { display: none; }
@@ -249,5 +250,5 @@
   .bs .mobile-filter-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
   .bs .detail-grid { grid-template-columns: 1fr; }
   .bs .hero-grid { grid-template-columns: 1fr; }
-  .bs .hero-grid .img-placeholder { height: 220px !important; }
+  .bs .hero-grid .img-placeholder { height: 120px !important; }
 }
