@@ -1,0 +1,29 @@
+name: Refresh marketplace listings
+
+# Weekly pull of Empire Flippers listings into Supabase (same as `npm run fetch:ef`).
+# Also counts as activity, so the free-tier Supabase project doesn't auto-pause.
+# Needs repo secrets SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Mondays 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run fetch:ef
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

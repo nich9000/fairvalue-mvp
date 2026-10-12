@@ -19,7 +19,7 @@ function buildRiskFactors(listing: any): string[] {
 }
 
 router.get('/', async (req, res) => {
-  const { platform, niche, revenue_min, revenue_max, fulfillment, traffic, marketplace, category, multiple_min, multiple_max, sort, page, limit } =
+  const { platform, niche, revenue_min, revenue_max, fulfillment, traffic, marketplace, category, business_model, multiple_min, multiple_max, sort, page, limit } =
     req.query;
 
   let query = supabase.from('marketplace_listings').select('*').eq('listing_status', 'active');
@@ -40,6 +40,10 @@ router.get('/', async (req, res) => {
   if (marketplace) {
     const marketplaces = (marketplace as string).split('|').filter(Boolean);
     if (marketplaces.length) query = query.in('source_marketplace', marketplaces);
+  }
+  if (business_model) {
+    const models = (business_model as string).split('|').filter(Boolean);
+    if (models.length) query = query.in('business_model', models);
   }
 
   const { data: rawListings, error } = await query;
@@ -62,15 +66,18 @@ router.get('/', async (req, res) => {
   // all active listings regardless of the current filters, so counts stay stable as a user filters.
   const { data: allActive } = await supabase
     .from('marketplace_listings')
-    .select('source_marketplace, platform, niche_category, annual_revenue')
+    .select('source_marketplace, business_model, platform, niche_category, annual_revenue')
     .eq('listing_status', 'active');
   const marketplaceCounts = new Map<string, number>();
+  const businessModelCounts = new Map<string, number>();
   const platformCounts = new Map<string, number>();
   const categoryCounts = new Map<string, number>();
   let revenueMin: number | null = null;
   let revenueMax: number | null = null;
   for (const row of allActive ?? []) {
     marketplaceCounts.set(row.source_marketplace, (marketplaceCounts.get(row.source_marketplace) ?? 0) + 1);
+    const model = row.business_model ?? 'ecommerce';
+    businessModelCounts.set(model, (businessModelCounts.get(model) ?? 0) + 1);
     for (const displayPlatform of platformDisplayBuckets(row.platform)) {
       platformCounts.set(displayPlatform, (platformCounts.get(displayPlatform) ?? 0) + 1);
     }
@@ -89,6 +96,9 @@ router.get('/', async (req, res) => {
   const marketplace_counts = Array.from(marketplaceCounts.entries())
     .map(([source_marketplace, count]) => ({ source_marketplace, count }))
     .sort((a, b) => byCountDesc(a, b) || a.source_marketplace.localeCompare(b.source_marketplace));
+  const business_model_counts = Array.from(businessModelCounts.entries())
+    .map(([business_model, count]) => ({ business_model, count }))
+    .sort((a, b) => byCountDesc(a, b) || a.business_model.localeCompare(b.business_model));
   const platform_counts = Array.from(platformCounts.entries())
     .map(([platform, count]) => ({ platform, count }))
     .sort((a, b) => byCountDesc(a, b) || a.platform.localeCompare(b.platform));
@@ -157,6 +167,7 @@ router.get('/', async (req, res) => {
     has_next: start + limitNum < merged.length,
     source_breakdown,
     marketplace_counts,
+    business_model_counts,
     platform_counts,
     category_counts,
     revenue_range: revenueMin !== null && revenueMax !== null ? { min: revenueMin, max: revenueMax } : null,

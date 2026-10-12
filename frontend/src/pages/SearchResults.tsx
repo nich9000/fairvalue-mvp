@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import Auth from '../components/Auth';
 import Nav from '../components/Nav';
 import Toast from '../components/Toast';
-import { CategoryCountEntry, MarketplaceCountEntry, MarketplaceListing, PlatformCountEntry, SearchFilters, createTrackedNiche, getSavedDeals, saveDeal, searchListings, unsaveDeal } from '../lib/dealsApi';
+import { CategoryCountEntry, MarketplaceCountEntry,
+  BusinessModelCountEntry, MarketplaceListing, PlatformCountEntry, SearchFilters, createTrackedNiche, getSavedDeals, saveDeal, searchListings, unsaveDeal } from '../lib/dealsApi';
 import { formatCurrency, formatMultiple, valueScoreLabel } from '../lib/format';
 import { CategoryIcon, CategoryIconByBucket, PlatformIcon } from '../lib/icons';
 
@@ -24,6 +25,16 @@ function FilterSection({ title, children, defaultOpen = true }: { title: string;
 
 const SOURCE_LABEL: Record<string, string> = {
   empire_flippers: 'Empire Flippers',
+};
+
+const BUSINESS_MODEL_LABEL: Record<string, string> = {
+  ecommerce: 'E-commerce',
+  saas: 'SaaS',
+  app: 'App',
+  content: 'Content',
+  digital_product: 'Digital product',
+  service: 'Service / agency',
+  other: 'Other',
 };
 
 const SORT_OPTIONS: { value: NonNullable<SearchFilters['sort']>; label: string }[] = [
@@ -65,6 +76,7 @@ export default function SearchResults() {
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [marketplaceCounts, setMarketplaceCounts] = useState<MarketplaceCountEntry[]>([]);
+  const [businessModelCounts, setBusinessModelCounts] = useState<BusinessModelCountEntry[]>([]);
   const [platformCounts, setPlatformCounts] = useState<PlatformCountEntry[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<CategoryCountEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -138,6 +150,7 @@ export default function SearchResults() {
   // "|" not "," — several category bucket names (e.g. "Toys, Games & Hobbies") contain a
   // literal comma, which would otherwise collide with the multi-select join delimiter.
   const selectedMarketplaces = searchParams.get('marketplace')?.split('|').filter(Boolean) ?? [];
+  const selectedBusinessModels = searchParams.get('business_model')?.split('|').filter(Boolean) ?? [];
   const selectedPlatforms = searchParams.get('platform')?.split('|').filter(Boolean) ?? [];
   const selectedCategories = searchParams.get('category')?.split('|').filter(Boolean) ?? [];
   const sort = (searchParams.get('sort') as SearchFilters['sort']) ?? 'listed_date';
@@ -157,6 +170,7 @@ export default function SearchResults() {
       niche: niche || undefined,
       platform: selectedPlatforms.length ? selectedPlatforms.join('|') : undefined,
       marketplace: selectedMarketplaces.length ? selectedMarketplaces.join('|') : undefined,
+      business_model: selectedBusinessModels.length ? selectedBusinessModels.join('|') : undefined,
       category: selectedCategories.length ? selectedCategories.join('|') : undefined,
       revenue_min: searchParams.get('revenue_min') ? Number(searchParams.get('revenue_min')) : undefined,
       revenue_max: searchParams.get('revenue_max') ? Number(searchParams.get('revenue_max')) : undefined,
@@ -174,6 +188,7 @@ export default function SearchResults() {
         setTotalCount(res.total_count);
         setTotalPages(res.total_pages);
         setMarketplaceCounts(res.marketplace_counts);
+        setBusinessModelCounts(res.business_model_counts ?? []);
         setPlatformCounts(res.platform_counts);
         setCategoryCounts(res.category_counts);
       })
@@ -267,6 +282,7 @@ export default function SearchResults() {
 
   let activeFilterCount = 0;
   if (selectedMarketplaces.length > 0) activeFilterCount++;
+  if (selectedBusinessModels.length > 0) activeFilterCount++;
   if (selectedPlatforms.length > 0) activeFilterCount++;
   if (selectedCategories.length > 0) activeFilterCount++;
   if (revenueMin || revenueMax) activeFilterCount++;
@@ -275,6 +291,21 @@ export default function SearchResults() {
   function renderFilterSections() {
     return (
       <>
+        <FilterSection title="Business model">
+          {businessModelCounts.map((b) => (
+            <label key={b.business_model} className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={selectedBusinessModels.length === 0 || selectedBusinessModels.includes(b.business_model)}
+                onChange={() => toggleInList('business_model', selectedBusinessModels.length ? selectedBusinessModels : businessModelCounts.map((x) => x.business_model), b.business_model)}
+              />
+              <span className="box"></span>
+              {BUSINESS_MODEL_LABEL[b.business_model] ?? b.business_model}
+              <span className="count">{b.count}</span>
+            </label>
+          ))}
+        </FilterSection>
+
         <FilterSection title="Marketplace">
           {marketplaceCounts.map((m) => (
             <label key={m.source_marketplace} className="checkbox-item">
@@ -438,13 +469,15 @@ export default function SearchResults() {
                   <div style={{ flex: 1, minWidth: 220 }}>
                     <div className="card-kicker" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <PlatformIcon platform={listing.platform} />
-                      {SOURCE_LABEL[listing.source_marketplace] ?? listing.source_marketplace} · {listing.platform}
+                      {SOURCE_LABEL[listing.source_marketplace] ?? listing.source_marketplace} ·{' '}
+                      {listing.business_model && listing.business_model !== 'ecommerce' ? `${BUSINESS_MODEL_LABEL[listing.business_model] ?? listing.business_model} · ` : ''}
+                      {listing.platform}
                       {listing.niche_category ? ` · ${listing.niche_category}` : ''}
                     </div>
                     <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <CategoryIcon niche={listing.niche_category} />
                       <Link to={`/deals/${listing.id}`} className="stretched-link" style={{ color: 'inherit', textDecoration: 'none' }}>
-                        {listing.niche_category ?? 'E-commerce business'}
+                        {listing.niche_category ?? `${BUSINESS_MODEL_LABEL[listing.business_model ?? 'ecommerce'] ?? 'Online'} business`}
                       </Link>
                     </div>
                     <div className="card-meta">

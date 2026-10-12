@@ -74,6 +74,12 @@ See [`backend/src/services/valuation.ts`](backend/src/services/valuation.ts). Su
 5. Confidence score scales with the number of matched comps.
 6. Improvement opportunities are computed per metric and sorted by value gain.
 
+## Listing data refresh
+
+`npm run fetch:ef` (in `backend/`) replaces all Empire Flippers rows with the current For Sale, Pending and Sold listings from their public Marketplace API, across every business model (e-commerce, SaaS, app, content, digital product, service), then recomputes the pricing index and deal rankings.
+
+`.github/workflows/refresh-listings.yml` runs it every Monday and on demand (Actions → Refresh marketplace listings → Run workflow). Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as repository secrets first. Before the first run on an existing database, run the `business_model` migration at the bottom of `backend/src/db/schema_deals.sql`.
+
 ## Deployment
 
 - **Frontend → Vercel**: connect the GitHub repo, root directory `frontend`, set `VITE_API_URL` to the Railway backend's public URL.
