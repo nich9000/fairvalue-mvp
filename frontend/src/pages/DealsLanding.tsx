@@ -12,7 +12,13 @@ const SOURCE_LABEL: Record<string, string> = {
 
 const CARD_WIDTH = 320;
 const CARD_GAP = 20;
-const HERO_PHOTO = '1551288049-bebda4e38f71';
+// One photo each from a few different niches, to show the range of businesses listed.
+const HERO_PHOTOS: [string, string][] = [
+  ['1556911220-bff31c812dba', 'Modern kitchen'],
+  ['1441984904996-e0b6ba687e04', 'Clothing boutique'],
+  ['1450778869180-41d0601e046e', 'Dog and cat'],
+  ['1598440947619-2c35fc9aa908', 'Skincare products'],
+];
 
 export default function DealsLanding() {
   const navigate = useNavigate();
@@ -86,7 +92,11 @@ export default function DealsLanding() {
             businesses actually sold for — before you talk numbers with anyone.
           </p>
         </div>
-        <ListingImage photoId={HERO_PHOTO} alt="Business analytics on a laptop" width="100%" height={360} srcWidth={900} eager />
+        <div className="hero-collage">
+          {HERO_PHOTOS.map(([id, alt]) => (
+            <ListingImage key={id} photoId={id} alt={alt} width="100%" height={174} srcWidth={480} eager />
+          ))}
+        </div>
       </section>
 
       <section style={{ maxWidth: 1120, margin: '0 auto', padding: '0 var(--space-4) var(--space-6)' }}>
